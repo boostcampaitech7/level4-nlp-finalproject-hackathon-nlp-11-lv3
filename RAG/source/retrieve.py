@@ -1,11 +1,14 @@
 # from langchain.smith import LangSmithSession
 from omegaconf import DictConfig
+from utils import set_seed
 
 from RAG.retrieval import get_retriever
 from RAG.utils.ret_evaluate import ret_evaluate
 
 
 def retrieve(cfg: DictConfig):
+    set_seed(cfg.seed)
+
     retriever = get_retriever(cfg)
 
     # dataset 확정되면 llm까지 연결 + 실험

@@ -5,6 +5,7 @@ from langsmith import traceable
 
 # from langsmith.wrappers import wrap_openai
 from omegaconf import DictConfig
+from utils import set_seed
 
 # from RAG.datasets import get_docs
 from RAG.generator import get_llm_api
@@ -13,6 +14,8 @@ from RAG.source.retrieve import retrieve
 
 @traceable(run_type="llm", metadata={"llm": "{llm_model}"})
 def generate(cfg: DictConfig):
+    set_seed(cfg.seed)
+
     # data
 
     # retrieval

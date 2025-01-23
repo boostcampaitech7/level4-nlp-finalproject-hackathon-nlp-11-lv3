@@ -16,7 +16,7 @@ from .base import BaseRetriever
 class DenseRetriever(BaseRetriever):
     def __init__(self, cfg):
         self.vector_store_path = cfg.vector_store_path
-        self.embedding_model = get_embedding_model(cfg.model_source, cfg.model)
+        self.embedding_model = get_embedding_model(cfg.embedding_model_source, cfg.embedding_model)
         self.index_factory = (
             cfg.index_factory
         )  # Flat, IVF, PQ, Flat+PQ 등이 있음 -> 속도와 정확도 trade-off 고려해서 어떻게 인덱싱할지

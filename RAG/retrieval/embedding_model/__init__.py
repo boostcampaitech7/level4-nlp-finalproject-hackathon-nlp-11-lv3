@@ -1,10 +1,3 @@
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
 def get_ebedding_model(cfg):
     if cfg.embedding_model_source == "huggingface":
         from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -19,6 +12,6 @@ def get_ebedding_model(cfg):
     elif cfg.embedding_model_sourcee == "openai":
         from langchain.embeddings import OpenAIEmbeddings
 
-        return OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"), model=cfg.embedding_model_name)
+        return OpenAIEmbeddings(openai_api_key=cfg.openai_key, model=cfg.embedding_model_name)
 
     # elif cfg.embedding_model_source=="naver":

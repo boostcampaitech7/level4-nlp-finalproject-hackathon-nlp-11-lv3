@@ -1,0 +1,12 @@
+defaults:
+  - inference: generator     
+  - ret_eval: ret_test
+  - ret_finetune: ret_finetune  
+  - _self_                 
+
+vector_store_path: "/data/ephemeral/data/vector_store"
+chunk_size: 300
+chunk_overlap: 15
+dataset: ODQA
+
+mode: retrieve

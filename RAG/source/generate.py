@@ -27,11 +27,9 @@ def generate(cfg: DictConfig):
     # prompt template
 
     with LangSmithSession(project_name="RAG-Generation", metadata={"run_id": "example_run"}) as session:
-        system_message = """Answer the users question using only the provided information below: {docs}""".format(
-            docs="\n".join(docs)
-        )
+        system_message = cfg.chat_template.format(docs="\n".join(docs))
         prompt = PromptTemplate(input_variables=["docs"], template=system_message)
-        llm = get_llm_api(cfg.llm_model_source, cfg.llm_model_name)
+        llm = get_llm_api(cfg)
 
         chain = prompt | llm | StrOutputParser()
 

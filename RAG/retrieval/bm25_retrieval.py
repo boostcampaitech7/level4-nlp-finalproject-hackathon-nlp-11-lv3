@@ -13,7 +13,7 @@ from .base import BaseRetriever
 
 class BM25Retriever(BaseRetriever):
     def __init__(self, cfg):
-        self.pickle_path = cfg.pickle_path
+        self.pickle_path = cfg.vector_store_path
         self.bm25_index = self._load_or_create_bm25()
         self.documents = get_docs(cfg)
 

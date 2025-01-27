@@ -7,8 +7,8 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 
-from RAG.datasets import get_docs
-from RAG.retrieval.embedding_model import get_embedding_model
+from documents import get_docs
+from .embedding_model import get_embedding_model
 
 from .base import BaseRetriever
 
@@ -16,15 +16,12 @@ from .base import BaseRetriever
 class DenseRetriever(BaseRetriever):
     def __init__(self, cfg):
         self.vector_store_path = cfg.vector_store_path
-        self.embedding_model = get_embedding_model(cfg.embedding_model_source, cfg.embedding_model)
-        self.index_factory = (
-            cfg.index_factory
-        )  # Flat, IVF, PQ, Flat+PQ 등이 있음 -> 속도와 정확도 trade-off 고려해서 어떻게 인덱싱할지
+        self.chunk_size = cfg.chunk_size
+        self.documents = get_docs(cfg)
+        self.chuck_overlap = cfg.chunk_overlap
+        self.embedding_model = get_embedding_model(cfg)
         self.vector_store = self._load_or_create_vector_store()
         self.retriever = self.vector_store.as_retriever()
-        self.chunk_size = cfg.chunk_size
-        self.chuck_overlap = cfg.chunk_overlap
-        self.documents = get_docs(cfg)
 
     def _load_or_create_vector_store(self) -> FAISS:
         if os.path.exists(self.vector_store_path):
@@ -35,7 +32,7 @@ class DenseRetriever(BaseRetriever):
         else:
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chuck_overlap)
             split_docs = text_splitter.split_documents(self.documents)
-            vector_store = FAISS.from_documents(split_docs, self.embedding_model, index_factory=self.index_factory)
+            vector_store = FAISS.from_documents(split_docs, self.embedding_model)
             os.makedirs(self.vector_store_path, exist_ok=True)
             vector_store.save_local(self.vector_store_path)
             return vector_store

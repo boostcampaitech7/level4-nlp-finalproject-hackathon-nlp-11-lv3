@@ -1,4 +1,4 @@
-def get_ebedding_model(cfg):
+def get_embedding_model(cfg):
     if cfg.embedding_model_source == "huggingface":
         from langchain_community.embeddings import HuggingFaceEmbeddings
 

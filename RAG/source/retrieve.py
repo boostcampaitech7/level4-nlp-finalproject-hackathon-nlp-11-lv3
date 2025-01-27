@@ -1,9 +1,9 @@
 # from langchain.smith import LangSmithSession
 from omegaconf import DictConfig
-from utils import set_seed
+from utils.set_seed import set_seed
 
-from RAG.retrieval import get_retriever
-from RAG.utils.ret_evaluate import ret_evaluate
+from retrieval import get_retriever
+from utils.ret_evaluate import ret_evaluate
 
 
 def retrieve(cfg: DictConfig):

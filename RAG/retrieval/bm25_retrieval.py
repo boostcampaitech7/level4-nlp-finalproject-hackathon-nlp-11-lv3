@@ -6,7 +6,7 @@ import pickle
 from langchain.docstore.document import Document
 from rank_bm25 import BM25Okapi
 
-from RAG.datasets import get_docs
+from documents import get_docs
 
 from .base import BaseRetriever
 

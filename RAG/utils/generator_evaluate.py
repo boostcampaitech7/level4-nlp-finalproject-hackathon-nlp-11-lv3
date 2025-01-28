@@ -1,13 +1,15 @@
 import asyncio
+import json
 
 import deepeval
 from deepeval import evaluate
+from langsmith import Client
 from deepeval.test_case_import import LLMTestCaseParams
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase
 
-# 평가 기준 정의 (criteria 및 weight)
+client = Client()
 model="gpt-4o-mini"
 Generation_criteria = [
     {
@@ -120,6 +122,9 @@ metric9 = GEval(
     threshold=0.0
 )
 
+async def log_to_langsmith(result: dict):
+    
+
 async def get_metric_evaluations(test_case: LLMTestCaseParams) -> list:
     return await asyncio.gather(
         metric1.evaluate(test_case),
@@ -133,26 +138,43 @@ async def get_metric_evaluations(test_case: LLMTestCaseParams) -> list:
         metric9.evaluate(test_case)
     )
 
-def evaluate_single_sample(question: str, answer: str, ground_truth: str) -> dict:
+async def evaluate_single_sample(question: str, answer: str, ground_truth: str) -> dict:
     test_case = LLMTestCaseParams(
         input=question,
         actual_output=answer,
         expected_output=ground_truth
     )
     
-    score, reason = get_metric_evaluations(test_case)
-    #deepeval에서는 0~10에서 score 매긴 후, 0~1로 매핑함
-    for i in range(len(score)):
-        score[i]*=Generation_criteria[i]["weight"]
-
+    eval_result = await get_metric_evaluations(test_case)
     evaluation_result = {
         "question": question,
         "answer": answer,
         "ground_truth": ground_truth,
-        "scores_per_criterion": score,
-        "final_score": sum(score),
-        "reason": reason
+        "final_score": final_score,
     }
+
+    #deepeval에서는 0~10에서 score 매긴 후, 0~1로 매핑함
+    final_score=0
+    for i in range(len(eval_result)):
+        final_score+=eval_result[i][0]
+        evaluation_result[Generation_criteria[i]["name"]]=eval_result[i][0]*Generation_criteria[i]["weight"]+"점 "+eval_result[i][1]
+    
+    evaluation_result["final_score"]=final_score
+    '''
+    client.log(
+        run_type="evaluation",
+        name="G-Eval Batch Evaluation",
+        inputs={
+            "question": evaluation_result["question"],
+            "answer": evaluation_result["answer"],
+            "ground_truth": evaluation_result["ground_truth"],
+        },
+        outputs={
+            "final_score": result["final_score"],
+            #criteria reasons
+        },
+    )
+    '''
 
     return evaluation_result
 
@@ -164,5 +186,10 @@ def evaluate_batch(samples: dict) -> list:
             answer=item["answer"],
             ground_truth=item["ground_truth"]
         )
+        asyncio.run(log_to_langsmith(res))
         results.append(res)
+
+    with open("evaluation_results.json", "w", encoding="utf-8") as f:#추후 경로 수정
+        json.dump(results, f, indent=2, ensure_ascii=False)
+
     return results

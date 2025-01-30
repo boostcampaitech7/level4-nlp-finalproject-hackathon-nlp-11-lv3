@@ -581,8 +581,8 @@ def pdf_parsing_pipeline(config=None) -> None:
     )
 
     # OCR 처리
-    from folder_processor import FolderProcessor
-    processor = FolderProcessor(
+    from ocr_processor import OCRProcessor
+    processor = OCRProcessor(
         base_folder=root_dir,
         output_folder=ocr_output_dir
     )

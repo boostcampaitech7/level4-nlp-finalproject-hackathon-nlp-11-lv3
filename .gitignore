@@ -16,3 +16,5 @@
 *.tiff
 *.ico
 *.webp
+
+__pycache__/

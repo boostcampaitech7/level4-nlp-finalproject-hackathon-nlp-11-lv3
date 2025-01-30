@@ -1,9 +1,8 @@
 # from langchain.smith import LangSmithSession
 from omegaconf import DictConfig
-from utils import set_seed
-
-from RAG.retrieval import get_retriever
-from RAG.utils.ret_evaluate import ret_evaluate
+from retrieval import get_retriever
+from utils.ret_evaluate_acc import ret_evaluate_acc, ret_evaluate_geval
+from utils.set_seed import set_seed
 
 
 def retrieve(cfg: DictConfig):
@@ -14,4 +13,7 @@ def retrieve(cfg: DictConfig):
     # dataset 확정되면 llm까지 연결 + 실험
     # if cfg.mode == "inference": return retriever.get_relevant_documents(query, cfg.k)
 
-    ret_evaluate(retriever)
+    if cfg.g_eval:
+        ret_evaluate_geval(retriever)
+    else:
+        ret_evaluate_acc(retriever)

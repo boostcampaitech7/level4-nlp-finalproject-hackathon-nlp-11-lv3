@@ -1,40 +1,42 @@
+import tqdm
+from datasets import load_from_disk
+from generator import get_llm_api
 from langchain.prompts import PromptTemplate
-from langchain.smith import LangSmithSession
-from langchain_core.output_parsers import StrOutputParser
-from langsmith import traceable
-
-# from langsmith.wrappers import wrap_openai
 from omegaconf import DictConfig
+from openai import OpenAI
+from retrieval import get_retriever
 from utils import set_seed
+from utils.generator_evaluate import evaluate_batch
 
-# from RAG.datasets import get_docs
-from RAG.generator import get_llm_api
-from RAG.source.retrieve import retrieve
+client = OpenAI()
 
 
-@traceable(run_type="llm", metadata={"llm": "{llm_model}"})
 def generate(cfg: DictConfig):
     set_seed(cfg.seed)
+    all_results = []
 
     # data
+    dataset = load_from_disk("/data/ephemeral/data/train_dataset")  # 자체 데이터 구축 후 수정
 
     # retrieval
-    docs = retrieve(cfg)
+    retriever = get_retriever(cfg)
 
-    # docs relevant 검사 필요한지 체크 필요
-    # docs reorder 필요한지 체크 필요
+    # llm
+    model = get_llm_api(cfg)
+    for item in tqdm.tqdm(dataset["validation"], desc="Processing Queries"):
+        query_result = {"query": item["query"]}
 
-    # prompt template
+        docs = retriever.get_relevant_documents(item["query"])
+        query_result["retrieved_docs"] = docs
 
-    with LangSmithSession(project_name="RAG-Generation", metadata={"run_id": "example_run"}) as session:
         system_message = cfg.chat_template.format(docs="\n".join(docs))
         prompt = PromptTemplate(input_variables=["docs"], template=system_message)
-        llm = get_llm_api(cfg)
 
-        chain = prompt | llm | StrOutputParser()
+        answer = model.invoke(prompt)
 
-        answer = session.run_chain(chain=chain, inputs={"docs": system_message}, metadata={"query": "example_query"})
-        # 평가
+        query_result["answer"] = answer
+        query_result["ground_truth"] = item["answer"]
 
-        # 평가 결과 리턴
-        return answer
+        all_results.append(query_result)
+
+    evaluate_batch(all_results)

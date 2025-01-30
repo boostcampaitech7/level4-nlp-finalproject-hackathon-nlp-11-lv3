@@ -3,14 +3,13 @@ from typing import List
 
 import os
 
+from documents import get_docs
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 
-from documents import get_docs
-from .embedding_model import get_embedding_model
-
 from .base import BaseRetriever
+from .embedding_model import get_embedding_model
 
 
 class DenseRetriever(BaseRetriever):

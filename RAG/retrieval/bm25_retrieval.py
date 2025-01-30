@@ -3,10 +3,9 @@ from typing import List
 import os
 import pickle
 
+from documents import get_docs
 from langchain.docstore.document import Document
 from rank_bm25 import BM25Okapi
-
-from documents import get_docs
 
 from .base import BaseRetriever
 

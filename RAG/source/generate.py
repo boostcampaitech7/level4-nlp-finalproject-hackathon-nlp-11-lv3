@@ -1,7 +1,7 @@
 import tqdm
 from datasets import load_from_disk
 from generator import get_llm_api
-from langchain.prompts import PromptTemplate
+from langchain.prompts import ChatPromptTemplate
 from omegaconf import DictConfig
 from openai import OpenAI
 from retrieval import get_retriever
@@ -22,15 +22,22 @@ def generate(cfg: DictConfig):
     retriever = get_retriever(cfg)
 
     # llm
+    system_template = cfg.chat_template
     model = get_llm_api(cfg)
+
     for item in tqdm.tqdm(dataset["validation"], desc="Processing Queries"):
         query_result = {"query": item["query"]}
 
         docs = retriever.get_relevant_documents(item["query"])
         query_result["retrieved_docs"] = docs
 
-        system_message = cfg.chat_template.format(docs="\n".join(docs))
-        prompt = PromptTemplate(input_variables=["docs"], template=system_message)
+        tem = ChatPromptTemplate.from_messages([("system", system_template), ("user", item["query"])])
+
+        s = ""
+        for i in range(len(docs)):
+            s += docs[i].page_content
+
+        prompt = tem.invoke({"docs": s})
 
         answer = model.invoke(prompt)
 

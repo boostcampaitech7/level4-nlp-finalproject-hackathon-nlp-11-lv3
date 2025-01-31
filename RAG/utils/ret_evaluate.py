@@ -175,6 +175,7 @@ def ret_evaluate_geval(retriever):
             "ground_truth": i["answer"],
         }
         sample["docs"] = retriever.get_relevant_documents(i["question"], k=50)
+
         samples.append(sample)
 
     evaluate_batch(samples)

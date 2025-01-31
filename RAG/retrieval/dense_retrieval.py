@@ -3,7 +3,7 @@ from typing import List
 
 import os
 
-from documents import get_docs
+from data import get_docs
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS

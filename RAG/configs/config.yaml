@@ -1,0 +1,26 @@
+defaults:
+  - inference: generator     
+  - ret_eval: ret_test
+  - ret_finetune: ret_finetune  
+  - _self_                 
+
+datapath: /data/ephemeral/data/wikipedia_documents.json
+vector_store_path: "/data/ephemeral/data/vector_store/index_nlpai-lab/KoE5"
+chunk_size: 300
+chunk_overlap: 15
+dataset: ODQA
+openai_key: ''
+seed: 42
+retriever_type: "dense"
+embedding_model_source: "huggingface"
+embedding_model_name: "nlpai-lab/KoE5"
+rarank: True
+reranker_model_name: "BAAI/bge-reranker"
+llm_model_source: "openai"
+llm_model_name: "gpt-3.5-turbo"
+chat_template: |
+  Answer the user's question using only the provided information below:
+  {docs}
+batch_size: 16
+g_eval: True
+mode: retrieve

@@ -3,6 +3,9 @@
 *.csv
 *.parquet
 .ipynb_checkpoints/
+.deepeval
+.deepeval_telemtry.txt
+
 
 .DS_Store
 *.json

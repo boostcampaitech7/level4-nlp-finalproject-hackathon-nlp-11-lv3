@@ -3,13 +3,14 @@ from typing import List
 
 import os
 
-from documents import get_docs
+from data import get_docs
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 
 from .base import BaseRetriever
 from .embedding_model import get_embedding_model
+from .reranking import get_reranker_model
 
 
 class DenseRetriever(BaseRetriever):
@@ -21,6 +22,8 @@ class DenseRetriever(BaseRetriever):
         self.embedding_model = get_embedding_model(cfg)
         self.vector_store = self._load_or_create_vector_store()
         self.retriever = self.vector_store.as_retriever()
+        if cfg.rerank:
+            self.retriever = get_reranker_model(cfg, self.retriever)
 
     def _load_or_create_vector_store(self) -> FAISS:
         if os.path.exists(self.vector_store_path):

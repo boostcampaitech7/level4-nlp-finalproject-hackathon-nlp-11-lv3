@@ -14,10 +14,13 @@ seed: 42
 retriever_type: "dense"
 embedding_model_source: "huggingface"
 embedding_model_name: "nlpai-lab/KoE5"
+rarank: True
+reranker_model_name: "BAAI/bge-reranker"
 llm_model_source: "openai"
 llm_model_name: "gpt-3.5-turbo"
 chat_template: |
   Answer the user's question using only the provided information below:
   {docs}
 batch_size: 16
+g_eval: True
 mode: retrieve

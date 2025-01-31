@@ -3,3 +3,7 @@
 *.csv
 *.parquet
 .ipynb_checkpoints/
+.deepeval
+*__pycache__
+.deepeval_telemtry.txt
+outputs/

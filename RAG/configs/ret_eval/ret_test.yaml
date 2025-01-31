@@ -2,4 +2,4 @@ defaults: []
 seed: 42
 retriever_type: "dense"
 embedding_model_source: "huggingface"
-embedding_model_name: "BAAI/bge-m3"
+embedding_model_name: "nlpai-lab/KURE-v1"

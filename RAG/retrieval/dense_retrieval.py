@@ -8,9 +8,9 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 
-from .base import BaseRetriever
-from .embedding_model import get_embedding_model
-from .reranking import get_reranker_model
+from base import BaseRetriever
+from embedding_model import get_embedding_model
+from reranking import get_reranker_model
 
 
 class DenseRetriever(BaseRetriever):

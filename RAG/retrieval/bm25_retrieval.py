@@ -7,7 +7,7 @@ from data import get_docs
 from langchain.docstore.document import Document
 from rank_bm25 import BM25Okapi
 
-from .base import BaseRetriever
+from base import BaseRetriever
 
 
 class BM25Retriever(BaseRetriever):

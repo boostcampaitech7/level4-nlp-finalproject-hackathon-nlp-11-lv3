@@ -3,7 +3,7 @@ import json
 
 from datasets import concatenate_datasets, load_from_disk
 from deepeval.metrics import GEval
-from deepeval.test_case_import import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 from langsmith import traceable
 from tqdm import tqdm
 

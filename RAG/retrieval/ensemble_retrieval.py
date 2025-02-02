@@ -2,7 +2,7 @@ from typing import List
 
 from langchain.docstore.document import Document
 
-from .base import BaseRetriever
+from base import BaseRetriever
 
 
 class EnsembleRetriever(BaseRetriever):

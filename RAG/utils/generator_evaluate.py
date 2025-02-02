@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from deepeval.metrics import GEval
-from deepeval.test_case_import import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 from langsmith import Client, traceable
 
 client = Client()

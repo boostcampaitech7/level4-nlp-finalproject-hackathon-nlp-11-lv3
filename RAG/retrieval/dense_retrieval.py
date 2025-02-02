@@ -7,6 +7,7 @@ from data import get_docs
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
+from langchain_community.vectorstores.utils import DistanceStrategy
 
 from .base import BaseRetriever
 from .embedding_model import get_embedding_model
@@ -34,7 +35,12 @@ class DenseRetriever(BaseRetriever):
         else:
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chuck_overlap)
             split_docs = text_splitter.split_documents(self.documents)
-            vector_store = FAISS.from_documents(split_docs, self.embedding_model)
+            vector_store = FAISS.from_documents(
+                split_docs,
+                self.embedding_model,
+                distance_strategy=DistanceStrategy.MAX_INNER_PRODUCT,
+                normalize_L2=True,
+            )
             os.makedirs(self.vector_store_path, exist_ok=True)
             vector_store.save_local(self.vector_store_path)
             return vector_store

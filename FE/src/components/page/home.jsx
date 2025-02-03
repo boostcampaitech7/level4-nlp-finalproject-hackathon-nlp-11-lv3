@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Main() {
+import Button from '@mui/material/Button';
+
+export default function Home() {
   const navigate = useNavigate();
 
   function goToChat() {
@@ -10,8 +12,8 @@ export default function Main() {
 
   return (
     <div>
-      <h1>Main Page</h1>
-      <button onClick={goToChat}>채팅 .. 할래 ..?</button>
+      <h1>Home</h1>
+      <Button onClick={goToChat}>채팅 .. 할래 ..?</Button>
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-
 import RouterConfiguration from './configs/router';
+
+import './App.css';
 
 function App() {
   return (
-    <RouterConfiguration />
+    <div className='body-style'>
+      <RouterConfiguration />
+    </div>
   );
 }
 

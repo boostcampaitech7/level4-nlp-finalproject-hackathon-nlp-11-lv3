@@ -19,5 +19,9 @@
 *.tiff
 *.ico
 *.webp
+*.pdf
 
+/vector_db
+*.bin
+*.sqlite3
 __pycache__/

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Button from '@mui/material/Button';
 import CustomSpace from '../atom/CustomBox'
-import Input from '../atom/input'
+import Input from '../atom/Input'
 
 export default function QueryInput() {
     const navigate = useNavigate();

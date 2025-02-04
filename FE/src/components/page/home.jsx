@@ -1,24 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { styled, Box } from '@mui/system'
 
-import Button from '@mui/material/Button';
-import CustomText from '../atom/customText';
+import SideBar from '../atom/SideBar'
+import CustomText from '../atom/CustomText';
+import QueryInput from '../module/QueryInput';
 
 export default function Home() {
-  const navigate = useNavigate();
-
-  function goToChat() {
-    navigate('/chat');
-  }
-
   return (
-    <div>
-      <CustomText size='l' my='20' mx='20'>무엇을 도와드릴까요?</CustomText>
-      
+    <Box sx={{display: 'flex'}}>
+      <SideBar>
+      </SideBar>
 
-      <div>
-        <Button onClick={goToChat}>채팅 .. 할래 ..?</Button>
-      </div>
-    </div>
+      <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
+        <CustomText weight='bold' size='l' my='20' mx='20'>무엇을 도와드릴까요?</CustomText>
+        <QueryInput />
+      </Box>
+    </Box>
   );
 }

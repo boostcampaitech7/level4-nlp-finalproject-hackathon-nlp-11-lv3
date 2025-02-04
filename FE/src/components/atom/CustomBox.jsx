@@ -1,5 +1,4 @@
 import React from 'react'
-
 import { styled, Box } from '@mui/system'
 
 const CustomBox = styled(Box)(

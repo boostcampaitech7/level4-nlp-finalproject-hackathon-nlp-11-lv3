@@ -53,8 +53,8 @@ def main(cfg: DictConfig):
             # 벡터 스토어 초기화 및 업데이트
             vector_store = VectorStore(cfg=cfg, persist_directory=vector_db_dir)
             vector_store.update_company_vector_stores(text_json_path, table_json_path)
-            
-            # 처리된 파일 이동
+            vector_store.update_all_vector_stores(text_json_path, table_json_path)
+            # 처리된 파일 이동 
             vector_store.move_to_old_data(
                 [text_json_path, table_json_path],
                 old_data_dir="../../PDF_OCR/old_data"

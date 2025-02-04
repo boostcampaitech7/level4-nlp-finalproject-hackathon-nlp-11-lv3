@@ -94,7 +94,36 @@ class VectorStore:
             
             vectorstore.persist()
             print(f"{company} 벡터 DB 업데이트 완료: {len(documents)}개 문서 추가")
-            
+        
+    def update_all_vector_stores(self, text_json_path: str, table_json_path: str):
+        """
+        모든 데이터를 통합하여 벡터 DB를 업데이트합니다.
+        """
+        # JSON 데이터 로드
+        text_data = self.load_json_data(text_json_path) 
+        table_data = self.load_json_data(table_json_path)
+        
+        # 모든 데이터 통합
+        all_data = text_data + table_data
+        documents = self.create_documents(all_data)
+        # 모든 데이터를 통합한 벡터 DB 업데이트
+        company_persist_dir = os.path.join(self.persist_directory, "All_data")
+        if os.path.exists(company_persist_dir):
+            vectorstore = Chroma(
+                persist_directory=company_persist_dir,
+                embedding_function=self.embeddings
+            )   
+            vectorstore.add_documents(documents)
+        else:
+            vectorstore = Chroma.from_documents(
+                documents=documents,
+                embedding=self.embeddings,
+                persist_directory=company_persist_dir
+            )
+
+            vectorstore.persist()
+            print(f"All_data 벡터 DB 업데이트 완료: {len(documents)}개 문서 추가")
+
     def load_company_vectorstore(self, company: str) -> Chroma:
         """
         특정 회사의 벡터 DB를 로드합니다.

@@ -6,7 +6,7 @@ const InputBox = styled('input')(
     background-color: #212222;
     color: #ffffff;
     font-family: Pretendard-Regular;
-    font-size: 17px;
+    font-size: 18px;
     outline: none;
     border: none;
     border-radius: 25px;
@@ -16,8 +16,8 @@ const InputBox = styled('input')(
     `
 )
 
-export default function InputText({ type, placeholder, onChange }) {
+export default function InputText({ type, placeholder, onChange, autoFocus }) {
     return (
-        <InputBox type={type} placeholder={placeholder} onChange={onChange} />
+        <InputBox type={type} placeholder={placeholder} onChange={onChange} autoFocus={autoFocus} />
     )
 }

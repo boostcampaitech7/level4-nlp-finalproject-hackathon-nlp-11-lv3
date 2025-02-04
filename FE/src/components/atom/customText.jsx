@@ -3,10 +3,11 @@ import { styled } from '@mui/system';
 
 const CustomSpan = styled('span')(
     ({ size, color, weight, my, mx }) => `
-    font-size: ${getSize(size)};
     color: ${getColor(color)};
     font-family: ${getWeight(weight)};
+    font-size: ${getSize(size)};
     margin: ${getMargin(my)}px ${getMargin(mx)}px;
+    display: flex;
     `
 );
 
@@ -38,11 +39,11 @@ function getColor(color) {
         case 'second':
             return '#7A7A7C';
         case 'up':
-            return '#DA5F58';
+            return '#E43332';
         case 'down':
-            return '#5282CC';
+            return '#3871CA';
         case 'green':
-            return '#395540';
+            return '#37824A';
         default:
             return '#ffffff';
     }
@@ -51,11 +52,11 @@ function getColor(color) {
 function getWeight(weight) {
     switch (weight) {
         case 'bold':
-            return 'GmarketSansBold';
+            return 'Pretendard-Bold';
         case 'light':
-            return 'GmarketSansLight';
+            return 'Pretendard-Light';
         default:
-            return 'GmarketSansMedium';
+            return 'Pretendard-Regular';
     }    
 }
 

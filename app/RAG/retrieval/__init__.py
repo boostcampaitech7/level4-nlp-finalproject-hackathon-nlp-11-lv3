@@ -1,7 +1,7 @@
 from .dense_retrieval import DenseRetrieval
 from .bm25_retrieval import BM25Retrieval
 from .ensemble_retrieval import EnsembleRetrieval
-
+from .chroma_retrieval import ChromaRetrieval
 __all__ = ['DenseRetrieval', 'BM25Retrieval', 'EnsembleRetrieval']
 
 def get_retriever(cfg):

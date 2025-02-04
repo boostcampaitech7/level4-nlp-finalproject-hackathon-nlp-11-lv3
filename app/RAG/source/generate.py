@@ -4,7 +4,7 @@ from generator import get_llm_api
 from langchain.prompts import ChatPromptTemplate
 from omegaconf import DictConfig
 from openai import OpenAI
-from retrieval import get_retriever
+from retrieval import ChromaRetrieval
 from utils.set_seed import set_seed
 from utils.generator_evaluate import evaluate_batch
 
@@ -17,10 +17,11 @@ def generate(cfg: DictConfig):
 
     # data
     dataset = load_from_disk("/data/ephemeral/data/train_dataset")  # 자체 데이터 구축 후 수정
-
-    # retrieval
-    retriever = get_retriever(cfg)
-
+    
+    # retrieval = get_retriever(cfg)
+    # retrieval - ChromaRetrieval 사용
+    retriever = ChromaRetrieval(cfg)
+    
     # llm
     system_template = cfg.chat_template
     model = get_llm_api(cfg)

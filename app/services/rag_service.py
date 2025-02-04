@@ -14,7 +14,7 @@ rag_path = Path(__file__).parent.parent.parent
 sys.path.append(str(rag_path))
 
 # RAG 모듈 import
-from RAG.retrieval import DenseRetrieval, BM25Retrieval, EnsembleRetrieval
+from RAG.retrieval import DenseRetrieval, BM25Retrieval, EnsembleRetrieval, ChromaRetrieval
 from RAG.source.generate import generate
 
 class RAGService:

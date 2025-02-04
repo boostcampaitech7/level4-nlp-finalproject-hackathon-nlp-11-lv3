@@ -4,10 +4,11 @@ import { styled, Box } from '@mui/system'
 const SideBarBox = styled(Box)(
     () => `
     background-color: #212222;
-    width: 280px;
+    width: 300px;
     height: 100vh;
     display: flex;
-    // flex-direction: column;
+    flex-direction: column;
+    align-items: center;
     `
 )
 

@@ -1,13 +1,14 @@
 import React from 'react';
-import { styled } from '@mui/system';
+import { Box, styled } from '@mui/system';
 
-const CustomSpan = styled('span')(
+const CustomBox = styled(Box)(
     ({ size, color, weight, my, mx }) => `
     color: ${getColor(color)};
     font-family: ${getWeight(weight)};
     font-size: ${getSize(size)};
     margin: ${getMargin(my)}px ${getMargin(mx)}px;
     display: flex;
+    align-items: center;
     `
 );
 
@@ -24,9 +25,9 @@ function getSize(size) {
         case 's':
             return '20px';
         case 'xs':
-            return '16px';
+            return '15px';
         case 'xxs':
-            return '13px';
+            return '14px';
         default:
             return '20px';
     }
@@ -67,8 +68,8 @@ function getMargin(px) {
 
 export default function CustomText({ children, size, color, weight, my, mx }) {
     return (
-        <CustomSpan size={size} color={color} weight={weight} my={my} mx={mx}>
+        <CustomBox size={size} color={color} weight={weight} my={my} mx={mx}>
             {children}
-        </CustomSpan>
+        </CustomBox>
     )
 }

@@ -1,0 +1,72 @@
+inference:
+  seed: 42
+  llm_model_source: openai
+  llm_model_name: gpt-3.5-turbo
+  retriever_type: dense
+  embedding_model_source: huggingface
+  embedding_model_name: BAAI/bge-m3
+  chat_template: 'Answer the user''s question using only the provided information
+    below:
+
+    {docs}
+
+    '
+ret_eval:
+  seed: 42
+  retriever_type: dense
+  embedding_model_source: huggingface
+  embedding_model_name: nlpai-lab/KURE-v1
+ret_finetune:
+  model:
+    model_name_or_path: klue/roberta-large
+    dense_model_name_or_path: klue/roberta-large
+    config_name: null
+    tokenizer_name: null
+  data:
+    data_path: /data/ephemeral/data
+    overwrite_cache: false
+    preprocessing_num_workers: null
+    eval_retrieval: true
+    top_k_retrieval: 10
+    use_faiss: false
+    num_neg: 2
+  train:
+    output_dir: ./models/train_dataset
+    do_train: true
+    do_eval: true
+    overwrite_output_dir: true
+    report_to: wandb
+    per_device_train_batch_size: 3
+    per_device_eval_batch_size: 2
+    logging_strategy: steps
+    logging_steps: 50
+    evaluation_strategy: epoch
+    save_strategy: epoch
+    save_total_limit: 2
+    num_train_epochs: 1
+    warmup_steps: 300
+    seed: 42
+    dataloader_num_workers: 4
+    logging_first_step: true
+datapath: ../data/
+vector_store_path: /data/ephemeral/data/vector_store/index_nlpai-lab/KoE5
+chunk_size: 300
+chunk_overlap: 15
+dataset: ODQA
+openai_key: ''
+seed: 42
+retriever_type: dense
+embedding_model_source: huggingface
+embedding_model_name: nlpai-lab/KoE5
+rarank: true
+reranker_model_name: BAAI/bge-reranker
+llm_model_source: openai
+llm_model_name: gpt-3.5-turbo
+chat_template: 'Answer the user''s question using only the provided information below:
+
+  {docs}
+
+  '
+batch_size: 16
+g_eval: true
+mode: update_vectordb

@@ -16,7 +16,7 @@ const InputBox = styled('input')(
     `
 )
 
-export default function Input({ type, placeholder, onChange }) {
+export default function InputText({ type, placeholder, onChange }) {
     return (
         <InputBox type={type} placeholder={placeholder} onChange={onChange} />
     )

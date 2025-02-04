@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Button from '@mui/material/Button';
 
-export default function Chat() {
+export default function ChatPage() {
   const navigate = useNavigate();
 
   function goToHome() {

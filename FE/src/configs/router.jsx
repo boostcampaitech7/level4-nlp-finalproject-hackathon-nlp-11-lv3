@@ -1,14 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import Home from '../components/page/home';
-import Chat from '../components/page/chat';
+import MainPage from '../components/page/MainPage';
+import ChatPage from '../components/page/ChatPage';
 
 export default function RouterConfiguration() {
     return (
         <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/chat' element={<Chat />} />
+            <Route path='/' element={<MainPage />} />
+            <Route path='/chat' element={<ChatPage />} />
         </Routes>
     );
 }

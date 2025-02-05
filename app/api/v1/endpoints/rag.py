@@ -14,13 +14,14 @@ async def query(request: QueryRequest):
         logger.info(f"Received query request: {request.query}")
         
         # RAG 서비스를 통한 쿼리 처리
-        answer, retrieved_docs, processing_time = await rag_service.process_query(request)
+        answer, retrieved_docs, processing_time, company = await rag_service.process_query(request)
         
         # 응답 생성
         response = QueryResponse(
             answer=answer,
             retrieved_documents=retrieved_docs,
-            processing_time=processing_time
+            processing_time=processing_time,
+            company=company
         )
         
         logger.info(f"Query processed successfully in {processing_time:.2f} seconds")

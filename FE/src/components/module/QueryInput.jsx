@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { styled, Box } from '@mui/system'
 
 import CustomContainer from '../atom/CustomContainer'
@@ -21,6 +21,7 @@ const IconBox = styled(Box) (
     }
     `
 )
+
 export default function QueryInput() {
     const [query, setQuery] = useState();
     const max_tokens = 1000;
@@ -30,13 +31,11 @@ export default function QueryInput() {
 
     function onKeyUp(e) {
         if (e.key == 'Enter' && query) {
-            onClickSubmit();
+            onClickSearch();
         }
     }
 
-    function onClickSubmit() {
-        console.log('hi');
-        
+    function onClickSearch() {
         navigate('/chat', { state : { query }});
         
         // requestQuery(
@@ -56,12 +55,16 @@ export default function QueryInput() {
         console.log(res);
     }
 
+    function onClickFile() {
+
+    }
+
     return (
         <CustomContainer color='212222' radius='25' width='85' height='130'>
-            <InputText size='m' placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)}/>
+            <InputText placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)}/>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', width: '90px'}}>
-                <IconBox onClick={onClickSubmit}><img src={FileIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
-                <IconBox onClick={onClickSubmit}><img src={SearchIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
+                <IconBox onClick={onClickFile}><img src={FileIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
+                <IconBox onClick={onClickSearch}><img src={SearchIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
             </Box> 
         </CustomContainer>
     )

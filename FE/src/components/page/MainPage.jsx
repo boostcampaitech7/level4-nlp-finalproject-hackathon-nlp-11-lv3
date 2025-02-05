@@ -1,5 +1,5 @@
 import React from 'react';
-import { styled, Box, margin, bgcolor } from '@mui/system'
+import { styled, Box } from '@mui/system'
 
 import CustomText from '../atom/CustomText';
 import QueryInput from '../module/QueryInput';
@@ -15,13 +15,13 @@ export default function MainPage() {
       <SideBar>
         <IndexWidget />
         <ExchangeRateWidget />
-        <Box sx={{ marginTop: 'auto', marginBottom: '20px', width: '85%' }}>
+        <Box sx={{ marginTop: 'auto', marginBottom: '20px', width: '80%' }}>
           <NewsWidget />
         </Box>
       </SideBar>
       
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
-        <CustomText weight='bold' size='l' my='20' mx='20'>주식을 검색해 드릴까요?</CustomText>
+        <CustomText weight='bold' size='xl' my='15' mx='20'>주식을 검색해 드릴까요?</CustomText>
         <QueryInput />
       </Box>
     </Box>

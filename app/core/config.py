@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 from typing import List
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
     # RAG 설정
-    RAG_CONFIG_PATH: str = os.getenv("RAG_CONFIG_PATH", "../../RAG/configs/config.yaml")
+    RAG_CONFIG_PATH: str = os.getenv("RAG_CONFIG_PATH", str(Path(__file__).parent.parent / "RAG/configs/config.yaml"))
     
     class Config:
         case_sensitive = True

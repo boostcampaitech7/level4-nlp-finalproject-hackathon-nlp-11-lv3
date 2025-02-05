@@ -9,9 +9,9 @@ from utils.query_rewriter import QueryRewriter
 
 class ChromaRetrieval(BaseRetriever):
     def __init__(self, cfg):
-        self.base_path = cfg.vector_store_path
+        self.base_path = './RAG/vector_db'
         self.embedding_model = HuggingFaceEmbeddings(
-            model_name=cfg.embedding.model_name,
+            model_name=cfg.embedding_model_name,
             model_kwargs={'device': 'cuda'},
             encode_kwargs={'normalize_embeddings': True}
         )
@@ -34,10 +34,17 @@ class ChromaRetrieval(BaseRetriever):
         # 쿼리에서 회사명 추출
         rewritten_query, company = self.query_rewriter.extract_company(query)
         
+        print("*******")
+        print(company)
+        print("*******")
         # 회사별 DB 또는 전체 DB에서 검색
         db = self._get_db(company)
         
         # 관련 문서 검색
-        docs = db.similarity_search(rewritten_query, k=k)
+        docs = []
+        # for query in rewritten_query:
+        #     docs.extend(db.similarity_search(query, k= 2*k // len(rewritten_query)))
+        # mmr
+        docs = db.max_marginal_relevance_search(query, k=k)
         
         return docs 

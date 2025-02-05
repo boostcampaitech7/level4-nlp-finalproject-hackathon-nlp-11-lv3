@@ -53,10 +53,12 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
         {
             "content": "검색된 문서 내용",
             "score": 0.95,
-            "source": "문서 출처"
+            "source": "문서 출처",
+            "company": "카카오뱅크"
         }
     ],
-    "processing_time": 1.23
+    "processing_time": 1.23,
+    "company": "카카오뱅크"
 }
 ```
 
@@ -67,7 +69,7 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 curl -X POST "http://localhost:8000/api/v1/query" \
      -H "Content-Type: application/json" \
      -d '{
-         "query": "질문 내용",
+         "query": "카카오뱅크의 2024년 매출액은?",
          "max_tokens": 1000,
          "temperature": 0.7
      }'

@@ -15,7 +15,13 @@ def get_llm_api(cfg):
 
     elif cfg.llm_model_source == "naver":
         from langchain_community.chat_models import ChatClovaX
-        return ChatClovaX(model="HCX-003", api_key=os.getenv("NAVER_API_KEY"))
+        from .ClovaStudioExcecutor import ClovaStudioExecutor
+        os.environ["NCP_CLOVASTUDIO_API_KEY"] = os.getenv("NCP_CLOVASTUDIO_API_KEY")
+        os.environ["NCP_CLOVASTUDIO_REQUEST_ID"] = os.getenv("NCP_CLOVASTUDIO_REQUEST_ID")
+        os.environ["NCP_APIGW_API_KEY"] = os.getenv("NCP_APIGW_API_KEY")
+        return ChatClovaX(
+            model="HCX-003",
+        )
 
     elif cfg.llm_model_source == "huggingface":
         return

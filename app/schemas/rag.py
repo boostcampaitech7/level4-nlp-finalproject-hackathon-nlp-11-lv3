@@ -8,6 +8,7 @@ class QueryRequest(BaseModel):
 
 class RetrievalResult(BaseModel):
     content: str = Field(..., description="검색된 문서 내용")
+    company: str = Field(..., description="문서 소속 기업")
     score: float = Field(..., description="검색 점수")
     source: str = Field(..., description="문서 출처")
 
@@ -15,3 +16,4 @@ class QueryResponse(BaseModel):
     answer: str = Field(..., description="생성된 답변")
     retrieved_documents: List[RetrievalResult] = Field(..., description="검색된 관련 문서들")
     processing_time: float = Field(..., description="처리 시간 (초)") 
+    company: str = Field(..., description="문서 소속 기업")

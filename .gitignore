@@ -25,3 +25,8 @@
 *.bin
 *.sqlite3
 __pycache__/
+
+.hydra/
+*.pickle
+
+test.sh

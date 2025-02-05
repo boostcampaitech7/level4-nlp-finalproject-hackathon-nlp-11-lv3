@@ -2,32 +2,34 @@ import React from 'react';
 import { Box, styled } from '@mui/system';
 
 const CustomBox = styled(Box)(
-    ({ size, color, weight, my, mx }) => `
+    ({ size, color, weight, my, mx, justifyContent, bgcolor }) => `
     color: ${getColor(color)};
     font-family: ${getWeight(weight)};
     font-size: ${getSize(size)};
     margin: ${getMargin(my)}px ${getMargin(mx)}px;
     display: flex;
     align-items: center;
+    justify-content: ${getJustifyContent(justifyContent)};
+    background-color: ${bgcolor};
     `
 );
 
 function getSize(size) {
     switch (size) {
         case 'xxl':
-            return '50px';
-        case 'xl':
-            return '40px';
-        case 'l':
             return '35px';
-        case 'm':
+        case 'xl':
+            return '33px';
+        case 'l':
             return '30px';
+        case 'm':
+            return '23px';
         case 's':
-            return '20px';
+            return '18px';
         case 'xs':
             return '15px';
         case 'xxs':
-            return '14px';
+            return '13px';
         default:
             return '20px';
     }
@@ -39,6 +41,8 @@ function getColor(color) {
             return '#ffffff';
         case 'second':
             return '#7A7A7C';
+        case 'blur':
+            return '#A1A1A1';
         case 'up':
             return '#E43332';
         case 'down':
@@ -66,9 +70,14 @@ function getMargin(px) {
     else return 0;
 }
 
-export default function CustomText({ children, size, color, weight, my, mx }) {
+function getJustifyContent(justifyContent) {
+    if (!!justifyContent) return justifyContent;
+    else return 'center';
+}
+
+export default function CustomText({ children, size, color, weight, my, mx, justifyContent, bgcolor }) {
     return (
-        <CustomBox size={size} color={color} weight={weight} my={my} mx={mx}>
+        <CustomBox size={size} color={color} weight={weight} my={my} mx={mx} justifyContent={justifyContent} bgcolor={bgcolor}>
             {children}
         </CustomBox>
     )

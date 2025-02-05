@@ -7,7 +7,7 @@ import CustomText from '../atom/CustomText'
 import CustomContainer from '../atom/CustomContainer'
 
 const URL = 'https://apis.data.go.kr/1160100/service/GetMarketIndexInfoService/getStockMarketIndex';
-const apiKey = import.meta.env.VITE_Index_API_KEY;
+const apiKey = import.meta.env.VITE_INDEX_API_KEY;
 const currentDate = moment().format('YYYYMMDD');
 
 export default function IndexWidget() {

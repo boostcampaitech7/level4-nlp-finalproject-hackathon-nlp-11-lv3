@@ -157,7 +157,7 @@ class MakeData:
                             "securities": broker_name,
                             "page": page,
                             "date": broker_date,
-                            "path": f"/ocr_results/{company}/{broker}/page_{page}/{file}.json"
+                            "path": f"./ocr_results/{company}/{broker}/{page}/{file}"
                         })
 
     def process_json_files(self, input_path):

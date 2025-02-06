@@ -1,5 +1,5 @@
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import hydra
 from omegaconf import DictConfig
 from loguru import logger
@@ -10,6 +10,7 @@ from langchain.prompts import ChatPromptTemplate
 import json
 from core.config import settings
 from schemas.rag import RetrievalResult, QueryRequest
+from RAG.generator import get_llm_api
 
 # RAG 모듈 import를 위한 경로 설정
 project_root = Path(__file__).parent.parent
@@ -18,17 +19,16 @@ sys.path.append(str(rag_path))
 
 # RAG 모듈 import
 from RAG.retrieval import DenseRetrieval, BM25Retrieval, EnsembleRetrieval, ChromaRetrieval
-from RAG.source.generate import generate
-from RAG.generator import get_llm_api
+#from RAG.source.generate import generate
 
 class RAGService:
     def __init__(self):
         """RAG 서비스 초기화"""
-        self.cfg = self._load_config()
+        self._load_config()
         self._init_retrievers()
-        #self._init_generator()
+        self._init_generator()
         
-    def _load_config(self) -> DictConfig:
+    def _load_config(self):
         """Hydra 설정 로드"""
         # 현재 작업 디렉토리를 저장
         original_cwd = os.getcwd()
@@ -39,7 +39,7 @@ class RAGService:
             # 상대 경로로 config_path 설정
             with hydra.initialize(version_base=None, config_path= "../RAG/configs"):
                 cfg = hydra.compose(config_name="config")
-                return cfg
+                self.cfg = cfg
         finally:
             # 원래 디렉토리로 복귀
             os.chdir(original_cwd)
@@ -68,13 +68,13 @@ class RAGService:
     def _init_generator(self):
         """생성 모델 초기화"""
         try:
-            self.generator = generate
+            #self.generator = generate
             logger.info("Successfully initialized generator")
         except Exception as e:
             logger.error(f"Error initializing generator: {str(e)}")
             raise
     
-    async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float]:
+    async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
         """
         사용자 쿼리 처리
         
@@ -82,7 +82,7 @@ class RAGService:
             request: QueryRequest - 사용자 요청
             
         Returns:
-            Tuple[str, List[RetrievalResult], float] - (답변, 검색된 문서들, 처리 시간)
+            Tuple[str, List[RetrievalResult], float, str] - (답변, 검색된 문서들, 처리 시간, 회사명)
         """
         start_time = time.time()
         

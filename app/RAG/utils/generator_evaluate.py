@@ -180,7 +180,7 @@ async def evaluate_single_sample(question: str, answer: str, ground_truth: str) 
 
 
 @traceable(run_type="G-eval")
-def evaluate_batch(samples: list) -> list:
+async def evaluate_batch(samples: list) -> list:
     results = []
     for item in samples:
         res = await evaluate_single_sample(

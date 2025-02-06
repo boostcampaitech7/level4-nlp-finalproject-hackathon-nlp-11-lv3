@@ -10,7 +10,8 @@ const CustomBox = styled(Box)(
     display: flex;
     align-items: center;
     justify-content: ${getJustifyContent(justifyContent)};
-    text-align: ${getTextAlign(textAlign)};
+    // text-align: ${getTextAlign(textAlign)};
+    // text-align: ${getTextAlign(textAlign)};
     `
 );
 

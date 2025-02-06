@@ -20,10 +20,10 @@ const IconBox = styled(Box) (
     `
 )
 
-export default function QueryInput({ children }) {
+export default function QueryOutput({ children, answer }) {    
     const [displayedText, setDisplayedText] = useState('');
+    // const answer = '현재 기준(2025년 2월 5일) 네이버의 시가총액은 343,016억 원으로 확인됩니다. 이는 한국 IT 산업 내에서 주요 기업으로서의 입지를 반영합니다. 네이버는 안정적인 재무 상태와 성장 가능성을 바탕으로 투자 매력이 있지만, 글로벌 경쟁 심화와 국내 시장 의존도가 도전 과제로 남아 있습니다. 투자를 고려할 경우, 네이버의 AI 기술 개발 및 전자상거래 확장과 같은 성장 동력을 주목하면서도 경쟁 환경과 시장 점유율 변화에 유의해야 합니다.';
 
-    const answer = '현재 기준(2025년 2월 5일) 네이버의 시가총액은 343,016억 원으로 확인됩니다. 이는 한국 IT 산업 내에서 주요 기업으로서의 입지를 반영합니다. 네이버는 안정적인 재무 상태와 성장 가능성을 바탕으로 투자 매력이 있지만, 글로벌 경쟁 심화와 국내 시장 의존도가 도전 과제로 남아 있습니다. 투자를 고려할 경우, 네이버의 AI 기술 개발 및 전자상거래 확장과 같은 성장 동력을 주목하면서도 경쟁 환경과 시장 점유율 변화에 유의해야 합니다.';
 
     function onClickCopy() {
         navigator.clipboard.writeText(answer);
@@ -37,7 +37,7 @@ export default function QueryInput({ children }) {
         let index = 0;
         
         const interval = setInterval(() => {
-            if (index < answer.length) {
+            if (index < answer?.length) {
                 const char = answer[index];
                 
                 setDisplayedText((prev) => prev + char);

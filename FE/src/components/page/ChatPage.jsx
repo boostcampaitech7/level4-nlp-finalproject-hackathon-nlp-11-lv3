@@ -5,7 +5,7 @@ import { Box } from '@mui/system'
 import CustomText from '../atom/CustomText';
 import SideBar from '../atom/SideBar'
 
-import IndexWidget from '../module/IndexWidget';
+import StockWidget from '../module/StockWidget';
 import ExchangeRateWidget from '../module/ExchangeRateWidget';
 import StockNewsWidget from '../module/StockNewsWidget';
 import QueryInput from '../module/QueryInput';
@@ -19,20 +19,21 @@ export default function MainPage() {
 
   const location = useLocation();
   const query = location.state?.query;
-  const companyName = '네이버';
+  const answer = location.state?.answer;
+  const company = location.state?.company;
+  
 
   return (
     <Box sx={{display: 'flex'}}>
       <SideBar>
-        <IndexWidget />
-        <ExchangeRateWidget />
+        <StockWidget />
         <Box sx={{ marginTop: 'auto', marginBottom: '20px', width: '80%' }}>
-          <StockNewsWidget>{companyName}</StockNewsWidget>
+          <StockNewsWidget>{company}</StockNewsWidget>
         </Box>
       </SideBar>
       
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100vw', marginBottom: '40px'}}>
-        <QueryOutput>{query}</QueryOutput>
+        <QueryOutput answer={answer}>{query}</QueryOutput>
         <QueryInput height='95' />
       </Box>
     </Box>

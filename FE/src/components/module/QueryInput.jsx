@@ -24,7 +24,9 @@ const IconBox = styled(Box) (
 )
 
 export default function QueryInput({ height }) {
-    const [query, setQuery] = useState();
+    const [query, setQuery] = useState('');
+    const [answer, setAnswer] = useState();
+    const [company, setCompany] = useState();
     const max_tokens = 1000;
     const temperature = 0.7;
 
@@ -37,19 +39,19 @@ export default function QueryInput({ height }) {
     }
 
     function onClickSearch() {
-        navigate('/chat', { state : { query }});
-        
-        // requestQuery(
-        //     query,
-        //     max_tokens,
-        //     temperature,
-        //     requestQuerySuccess,
-        //     requestQueryFail
-        // );
+        requestQuery(
+            query,
+            max_tokens,
+            temperature,
+            requestQuerySuccess,
+            requestQueryFail
+        ); 
     }
 
     function requestQuerySuccess(res) {
-        console.log(res.data);
+        setAnswer(res.data.answer);
+        if (res.data.company == '네이버') setCompany('NAVER');
+        else setCompany(res.data.company);
     }
 
     function requestQueryFail(res) {
@@ -59,6 +61,13 @@ export default function QueryInput({ height }) {
     function onClickFile() {
 
     }
+
+    useEffect(() => {
+        if (answer && company) {
+            navigate('/chat', { state: { query, answer, company } });
+        }
+    }, [answer, company]);
+    
 
     return (
         <CustomContainer color='212222' radius='25' width='85' height={height} padding='20'>

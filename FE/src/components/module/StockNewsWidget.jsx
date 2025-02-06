@@ -9,11 +9,11 @@ const URL = import.meta.env.VITE_NEWS_API_URL;
 const currentDate = moment().format('YYYY-MM-DD');
 const oneWeekAgoDate = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
-export default function NewsWidget() {
+export default function StockNewsWidget({ children }) {
     const [newsData, setNewsData] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    function getNewsSuccess(res) {        
+    function getNewsSuccess(res) {
         if (res.data.data) {
             setNewsData(res.data.data);
         }
@@ -23,6 +23,7 @@ export default function NewsWidget() {
         axios
             .get(URL, {
                 params: {
+                    keyword: `title:${children}`,
                     date_from: oneWeekAgoDate,
                     date_to: currentDate,
                     page_size: '30',

@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from langsmith import Client, traceable
 
 client = Client()
@@ -129,20 +129,20 @@ metric9 = GEval(
 
 async def get_metric_evaluations(test_case: LLMTestCaseParams) -> list:
     return await asyncio.gather(
-        metric1.evaluate(test_case),
-        metric2.evaluate(test_case),
-        metric3.evaluate(test_case),
-        metric4.evaluate(test_case),
-        metric5.evaluate(test_case),
-        metric6.evaluate(test_case),
-        metric7.evaluate(test_case),
-        metric8.evaluate(test_case),
-        metric9.evaluate(test_case),
+        metric1.a_measure(test_case),
+        metric2.a_measure(test_case),
+        metric3.a_measure(test_case),
+        metric4.a_measure(test_case),
+        metric5.a_measure(test_case),
+        metric6.a_measure(test_case),
+        metric7.a_measure(test_case),
+        metric8.a_measure(test_case),
+        metric9.a_measure(test_case),
     )
 
 
 async def evaluate_single_sample(question: str, answer: str, ground_truth: str) -> dict:
-    test_case = LLMTestCaseParams(input=question, actual_output=answer, expected_output=ground_truth)
+    test_case = LLMTestCase(input=question, actual_output=answer, expected_output=ground_truth)
 
     eval_result = await get_metric_evaluations(test_case)
     evaluation_result = {
@@ -156,7 +156,7 @@ async def evaluate_single_sample(question: str, answer: str, ground_truth: str) 
     for i in range(len(eval_result)):
         final_score += eval_result[i][0]
         evaluation_result[Generation_criteria[i]["name"]] = (
-            eval_result[i][0] * Generation_criteria[i]["weight"] + "점 " + eval_result[i][1]
+            str(round(eval_result[i] * Generation_criteria[i]["weight"], 1)) + "점 "
         )
 
     evaluation_result["final_score"] = final_score
@@ -183,7 +183,7 @@ async def evaluate_single_sample(question: str, answer: str, ground_truth: str) 
 def evaluate_batch(samples: list) -> list:
     results = []
     for item in samples:
-        res = evaluate_single_sample(
+        res = await evaluate_single_sample(
             question=item["question"], answer=item["answer"], ground_truth=item["ground_truth"]
         )
         # asyncio.run(log_to_langsmith(res))

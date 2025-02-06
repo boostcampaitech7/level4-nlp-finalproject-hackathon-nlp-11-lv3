@@ -1,9 +1,10 @@
 import asyncio
 import json
 
+import pandas as pd
 from datasets import concatenate_datasets, load_from_disk
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from langsmith import traceable
 from tqdm import tqdm
 
@@ -50,7 +51,7 @@ def ret_evaluate_acc(retriever):
     print(f"Top 50 Score: {top50_count / (i+1) * 100:.2f}%")
 
 
-def ret_evaluate_geval(retriever):
+def ret_evaluate_geval(retriever, cfg):
     model = "gpt-4o-mini"
     Generation_criteria = [
         {
@@ -123,15 +124,16 @@ def ret_evaluate_geval(retriever):
 
     async def get_metric_evaluations(test_case: LLMTestCaseParams) -> list:
         return await asyncio.gather(
-            metric1.evaluate(test_case),
-            metric2.evaluate(test_case),
-            metric3.evaluate(test_case),
-            metric4.evaluate(test_case),
-            metric5.evaluate(test_case),
+            metric1.a_measure(test_case),  # 비동기 지원
+            metric2.a_measure(test_case),
+            metric3.a_measure(test_case),
+            metric4.a_measure(test_case),
+            metric5.a_measure(test_case),
         )
 
     async def evaluate_single_sample(question: str, docs: list, ground_truth: list) -> dict:
-        test_case = LLMTestCaseParams(input=question, actual_output=docs, expected_output=ground_truth)
+        actual_output = ", ".join([f"문서{i+1}: {doc}" for i, doc in enumerate(docs)])
+        test_case = LLMTestCase(input=question, actual_output=actual_output, expected_output=ground_truth)
 
         eval_result = await get_metric_evaluations(test_case)
         evaluation_result = {
@@ -142,9 +144,11 @@ def ret_evaluate_geval(retriever):
 
         final_score = 0
         for i in range(len(eval_result)):
-            final_score += eval_result[i][0]
+            final_score += eval_result[
+                i
+            ]  # evaluate으로 평가하면 점수에 대한 reason도 반환하는데 그럼 eval_step을 입력해줘야함
             evaluation_result[Generation_criteria[i]["name"]] = (
-                eval_result[i][0] * Generation_criteria[i]["weight"] + "점 " + eval_result[i][1]
+                str(round(eval_result[i] * Generation_criteria[i]["weight"], 1)) + "점 "
             )
 
         evaluation_result["final_score"] = final_score
@@ -152,30 +156,31 @@ def ret_evaluate_geval(retriever):
         return evaluation_result
 
     @traceable(run_type="G-eval")
-    def evaluate_batch(samples: list) -> list:
+    async def evaluate_batch(samples: list) -> list:
         results = []
         for item in samples:
-            res = evaluate_single_sample(
+            res = await evaluate_single_sample(
                 question=item["question"], answer=item["docs"], ground_truth=item["ground_truth"]
             )
             results.append(res)
 
-        with open("ret_evaluation_results.json", "w", encoding="utf-8") as f:  # 추후 경로 수정
+        with open("ret_evaluation_results.json", "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
 
         return results
 
-    data = []  # 자체 데이터 완성시 수정
+    data = pd.read_csv(cfg.eval_data_path)
+
     samples = []
 
-    for i in data:
+    for _, row in data.iterrows():
         sample = {
-            "question": i["question"],
+            "question": row["question"],
             "docs": [],
-            "ground_truth": i["answer"],
+            "ground_truth": row["answer"],
         }
-        sample["docs"] = retriever.get_relevant_documents(i["question"], k=50)
+        sample["docs"] = retriever.get_relevant_documents(row["question"], k=cfg.tok_k)
 
         samples.append(sample)
 
-    evaluate_batch(samples)
+    await evaluate_batch(samples)

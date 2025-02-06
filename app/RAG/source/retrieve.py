@@ -14,6 +14,6 @@ def retrieve(cfg: DictConfig):
     # if cfg.mode == "inference": return retriever.get_relevant_documents(query, cfg.k)
 
     if cfg.g_eval:
-        ret_evaluate_geval(retriever)
+        ret_evaluate_geval(retriever, cfg)
     else:
         ret_evaluate_acc(retriever)

@@ -1,12 +1,13 @@
+import pandas as pd
 import tqdm
-from datasets import load_from_disk
+
 from generator import get_llm_api
 from langchain.prompts import ChatPromptTemplate
 from omegaconf import DictConfig
 from openai import OpenAI
 from retrieval import ChromaRetrieval
-from utils.set_seed import set_seed
 from utils.generator_evaluate import evaluate_batch
+from utils.set_seed import set_seed
 
 client = OpenAI()
 
@@ -16,25 +17,27 @@ def generate(cfg: DictConfig):
     all_results = []
 
     # data
-    dataset = load_from_disk("/data/ephemeral/data/train_dataset")  # 자체 데이터 구축 후 수정
-    
+    data = pd.read_csv("eval_data_path")
+
     # retrieval = get_retriever(cfg)
     # retrieval - ChromaRetrieval 사용
     retriever = ChromaRetrieval(cfg)
-    
+
     # llm
     system_template = cfg.chat_template
     model = get_llm_api(cfg)
 
-    
-    for item in tqdm.tqdm(dataset["validation"], desc="Processing Queries"):
-        # dataset validation 수정필요
-        query_result = {"query": item["query"]}
+    data = pd.read_csv(cfg.eval_data_path)
 
-        docs = retriever.get_relevant_documents(item["query"])
+    all_results = []
+    for _, row in tqdm.tqdm(data.iterrows(), desc="Processing Queries"):
+        # dataset validation 수정필요
+        query_result = {"query": row["question"]}
+
+        docs = retriever.get_relevant_documents(row["question"])
         query_result["retrieved_docs"] = docs
 
-        tem = ChatPromptTemplate.from_messages([("system", system_template), ("user", item["query"])])
+        tem = ChatPromptTemplate.from_messages([("system", system_template), ("user", row["question"])])
 
         s = ""
         for i in range(len(docs)):
@@ -45,8 +48,8 @@ def generate(cfg: DictConfig):
         answer = model.invoke(prompt)
 
         query_result["answer"] = answer
-        query_result["ground_truth"] = item["answer"]
+        query_result["ground_truth"] = row["llm_text"]
 
         all_results.append(query_result)
 
-    evaluate_batch(all_results)
+    await evaluate_batch(all_results)

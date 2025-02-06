@@ -19,6 +19,7 @@ retrieval:
   rerank: True
   reranker_model_name: "BAAI/bge-reranker"
 
+eval_data_path: "data/ephemeral/data/LabQ/selected_eval.csv"
 retriever_type: "dense"
 embedding_model_source: "huggingface"
 embedding_model_name: "nlpai-lab/KoE5"

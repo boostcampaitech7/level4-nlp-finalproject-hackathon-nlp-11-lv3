@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, styled } from '@mui/system';
 
 const CustomBox = styled(Box)(
-    ({ size, color, weight, my, mx, justifyContent, bgcolor }) => `
+    ({ size, color, weight, my, mx, justifyContent, textAlign }) => `
     color: ${getColor(color)};
     font-family: ${getWeight(weight)};
     font-size: ${getSize(size)};
@@ -10,7 +10,7 @@ const CustomBox = styled(Box)(
     display: flex;
     align-items: center;
     justify-content: ${getJustifyContent(justifyContent)};
-    background-color: ${bgcolor};
+    text-align: ${getTextAlign(textAlign)};
     `
 );
 
@@ -75,9 +75,14 @@ function getJustifyContent(justifyContent) {
     else return 'center';
 }
 
-export default function CustomText({ children, size, color, weight, my, mx, justifyContent, bgcolor }) {
+function getTextAlign(textAlign) {
+    if (!!textAlign) return textAlign;
+    else return 'center';
+}
+
+export default function CustomText({ children, size, color, weight, my, mx, justifyContent, textAlign }) {
     return (
-        <CustomBox size={size} color={color} weight={weight} my={my} mx={mx} justifyContent={justifyContent} bgcolor={bgcolor}>
+        <CustomBox size={size} color={color} weight={weight} my={my} mx={mx} justifyContent={justifyContent} textAlign={textAlign}>
             {children}
         </CustomBox>
     )

@@ -39,7 +39,6 @@ export default function QueryInput({ children }) {
         const interval = setInterval(() => {
             if (index < answer.length) {
                 const char = answer[index];
-                console.log(char);
                 
                 setDisplayedText((prev) => prev + char);
                 index++;
@@ -52,7 +51,7 @@ export default function QueryInput({ children }) {
     }, [answer]);
 
     return (
-        <CustomContainer color='191A1A' radius='10' width='85' height='auto' flexDirection='column' justifyContent='flex-start' padding='20' my='10'>
+        <CustomContainer color='191A1A' radius='25' width='85' height='auto' flexDirection='column' justifyContent='flex-start' padding='20' my='10'>
             <CustomText color='blur' weight='bold' size='m' justifyContent='flex-start' my='45' mx='25'>
                 {children}
             </CustomText>
@@ -61,7 +60,7 @@ export default function QueryInput({ children }) {
                 💡 답변
             </CustomText>
             
-            <CustomText size='xs' justifyContent='flex-start' my='20' mx='25'>
+            <CustomText size='xs' justifyContent='flex-start' textAlign='start' my='20' mx='25'>
                 {displayedText}
             </CustomText>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%'}}>

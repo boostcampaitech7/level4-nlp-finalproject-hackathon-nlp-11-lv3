@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { styled, Box } from '@mui/system'
+import axios from 'axios';
 
+import { styled, Box } from '@mui/system'
 import CustomContainer from '../atom/CustomContainer'
 import InputText from '../atom/InputText'
 
@@ -22,7 +23,7 @@ const IconBox = styled(Box) (
     `
 )
 
-export default function QueryInput() {
+export default function QueryInput({ height }) {
     const [query, setQuery] = useState();
     const max_tokens = 1000;
     const temperature = 0.7;
@@ -60,11 +61,11 @@ export default function QueryInput() {
     }
 
     return (
-        <CustomContainer color='212222' radius='25' width='85' height='130'>
+        <CustomContainer color='212222' radius='25' width='85' height={height} padding='20'>
             <InputText placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)}/>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', width: '90px'}}>
-                <IconBox onClick={onClickFile}><img src={FileIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
-                <IconBox onClick={onClickSearch}><img src={SearchIcon} style={{ width: '100%', height: '100%' }} /></IconBox>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%'}}>
+                <IconBox onClick={onClickFile}><img src={FileIcon} style={{ width: '26px', height: '100%' }} /></IconBox>
+                <IconBox onClick={onClickSearch}><img src={SearchIcon} style={{ width: '26px', height: '100%' }} /></IconBox>
             </Box> 
         </CustomContainer>
     )

@@ -12,7 +12,7 @@ from utils.set_seed import set_seed
 client = OpenAI()
 
 
-def generate(cfg: DictConfig):
+async def generate(cfg: DictConfig):
     set_seed(cfg.seed)
     all_results = []
 

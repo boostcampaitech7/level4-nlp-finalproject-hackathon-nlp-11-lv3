@@ -18,7 +18,7 @@ class VectorStore:
         """
         self.persist_directory = persist_directory
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=cfg.embedding_model_name,
+            model_name=cfg.passage_embedding_model_name,
             model_kwargs={'device': 'cuda'},
             encode_kwargs={'normalize_embeddings': True}
         )
@@ -46,7 +46,7 @@ class VectorStore:
             
             # Document 객체 생성
             doc = Document(
-                page_content=item["description"],
+                page_content="<"+item["company"] + ">" + item["description"],
                 metadata=metadata
             )
             documents.append(doc)

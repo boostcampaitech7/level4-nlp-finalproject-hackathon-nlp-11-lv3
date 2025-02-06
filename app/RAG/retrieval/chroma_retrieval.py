@@ -11,7 +11,7 @@ class ChromaRetrieval(BaseRetriever):
     def __init__(self, cfg):
         self.base_path = './RAG/vector_db'
         self.embedding_model = HuggingFaceEmbeddings(
-            model_name=cfg.embedding_model_name,
+            model_name=cfg.query_embedding_model_name,
             model_kwargs={'device': 'cuda'},
             encode_kwargs={'normalize_embeddings': True}
         )
@@ -19,7 +19,7 @@ class ChromaRetrieval(BaseRetriever):
         self.db_cache = {}
         
     def _get_db(self, company: Optional[str] = None) -> Chroma:
-        """특정 회사 또는 전체 데이터의 ChromaDB 인스턴스를 반환합니다."""
+        """특정 회사 또는 전체 데이터의 ChromaDB 인스턴스를 반환"""
         db_path = os.path.join(self.base_path, company if company else "All_data")
         
         if db_path not in self.db_cache:

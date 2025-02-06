@@ -22,9 +22,8 @@ retrieval:
 eval_data_path: "data/ephemeral/data/LabQ/selected_eval.csv"
 retriever_type: "dense"
 embedding_model_source: "huggingface"
-embedding_model_name: "nlpai-lab/KoE5"
-rarank: True
-reranker_model_name: "BAAI/bge-reranker"
+passage_embedding_model_name: "nlpai-lab/KoE5"
+query_embedding_model_name: "nlpai-lab/KoE5"
 llm_model_source: "naver"
 llm_model_name: "gpt-3.5-turbo"
 chat_template: |

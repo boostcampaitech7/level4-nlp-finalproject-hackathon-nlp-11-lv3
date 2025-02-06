@@ -65,15 +65,19 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 ### 3.2 API 호출 예시
 
 #### cURL
+
+## query
 ```bash
-curl -X POST "http://localhost:8000/api/v1/query" \
+curl -u test@email.com:1234 \
+     -X POST "http://0.0.0.0:8000/api/v1/query/" \
      -H "Content-Type: application/json" \
      -d '{
-         "query": "카카오뱅크의 2024년 매출액은?",
+         "query": "NAVER의 2024년 3분기 서치플랫폼 매출은 얼마이며, 전년 동기 대비 몇 % 증가했나요?",
          "max_tokens": 1000,
          "temperature": 0.7
      }'
 ```
+
 
 #### Python
 ```python

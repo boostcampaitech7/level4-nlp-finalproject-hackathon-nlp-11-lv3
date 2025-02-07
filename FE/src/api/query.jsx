@@ -11,4 +11,16 @@ function requestQuery(query, max_tokens, temperature, requestQuerySuccess, reque
         .catch(requestQueryFail);
 }
 
-export { requestQuery };
+function uploadFile(file, uploadFileSuccess, uploadFileFail) {
+    api
+        .post('v1/documents/upload/', {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            file: file
+        })
+        .then(uploadFileSuccess)
+        .catch(uploadFileFail)
+}
+
+export { requestQuery, uploadFile };

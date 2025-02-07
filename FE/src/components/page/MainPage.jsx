@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { styled, Box } from '@mui/system'
 import CustomText from '../atom/CustomText';
@@ -9,8 +9,19 @@ import ExchangeRateWidget from '../module/ExchangeRateWidget';
 import NewsWidget from '../module/NewsWidget';
 import QueryInput from '../module/QueryInput';
 import FileUpload from '../module/FileUpload';
+import SelectModel from '../module/SelectModel';
 
 export default function MainPage() {
+  const [model, setModel] = useState();
+
+  function handleChange(value) {
+    setModel(value);
+  };
+
+  useEffect(() => {
+    console.log(model);
+  }, [model])
+
   return (
     <Box sx={{display: 'flex'}}>
       {/* <FileUpload /> */}
@@ -25,6 +36,7 @@ export default function MainPage() {
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
         <CustomText weight='bold' size='xl' my='15' mx='20'>주식을 검색해 드릴까요?</CustomText>
         <QueryInput height='130'/>
+        <SelectModel onModelChange={handleChange} selectedValue={model} />
       </Box>
     </Box>
   );

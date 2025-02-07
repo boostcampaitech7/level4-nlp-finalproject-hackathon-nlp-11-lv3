@@ -20,12 +20,10 @@ def main(cfg: DictConfig):
 
     if cfg.mode == "retrieve":
         print("test retrieval")
-
         retrieve(cfg)
 
     elif cfg.mode == "generate":
         print("test inference")
-
         generate(cfg)
 
     elif cfg.mode == "update_vectordb":

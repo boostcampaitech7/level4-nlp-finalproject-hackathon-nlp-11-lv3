@@ -3,8 +3,10 @@ from typing import List, Dict, Any, Optional, Tuple
 import re
 import os
 from rapidfuzz import process
+import hydra
+from pathlib import Path
 
-
+from generator import get_llm_api
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import pipeline
@@ -23,27 +25,22 @@ from langchain_core.documents import Document
 
 """
 query_rewriting_prompt = """
-다음 쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성해주세요.
+다음 쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성하거나 분리해 주세요.
+만약 쿼리에 리스트에 있는 회사명과 같은 회사명이 있으면 리스트의 이름으로 수정해주세요.
+{list}
+예시)
+원본 쿼리: kakaobank 주가 예측
+수정된 쿼리: 카카오뱅크 주가 예측
+
+원본 쿼리: 카카오뱅크와 네이버 주가 예측
+수정된 쿼리: 1. 카카오뱅크 주가 예측, 2. 네이버 주가 예측
+
 
 원본 쿼리: {query}
 수정된 쿼리:
 """
 
-query_decompose_prompt = """
-다음 쿼리를 더 작은 단위로 분해해주세요. 만약 분해할 필요가 없는 쿼리라면 원본 쿼리를 그대로 반환해주세요.
-예시)
-원본 쿼리: 카카오뱅크와 네이버 주가 예측
-분해된 쿼리: 카카오뱅크 주가 예측, 네이버 주가 예측
-
-원본 쿼리: 카카오뱅크 주가 예측
-분해된 쿼리: 카카오뱅크 주가 예측
-
-원본 쿼리: {query}
-분해된 쿼리:
-"""
-
-
-
+project_root = Path(__file__).parent.parent
 class QueryRewriter:
     def __init__(self):
         self.company_names = [
@@ -51,9 +48,26 @@ class QueryRewriter:
             "네이버", "SK하이닉스", "한화솔루션", "SK케미칼", "크래프톤",
             
         ]
-        self.model = ChatClovaX(model_name="HCX-003", clovastudio_api_key = os.getenv("NCP_CLOVASTUDIO_API_KEY"))
+        
         self.parser = StrOutputParser()
-
+        self._load_config()
+        self.model = get_llm_api(self.cfg)
+    def _load_config(self):
+        """Hydra 설정 로드"""
+        # 현재 작업 디렉토리를 저장
+        original_cwd = os.getcwd()
+        
+        try:
+            os.chdir(str(project_root))
+            
+            # 상대 경로로 config_path 설정
+            with hydra.initialize(version_base=None, config_path= "../configs"):
+                cfg = hydra.compose(config_name="config")
+                self.cfg = cfg
+        finally:
+            # 원래 디렉토리로 복귀
+            os.chdir(original_cwd)
+    
     def extract_company(self, query: str) -> Tuple[str, Optional[str]]:
         """
         쿼리에서 회사명을 추출하고, 수정된 쿼리와 회사명을 반환합니다.
@@ -64,7 +78,10 @@ class QueryRewriter:
         Returns:
             Tuple[str, Optional[str]]: (수정된 쿼리, 회사명) 또는 (원본 쿼리, None)
         """
+        #query 대문자로 변경
+        query = query.upper()
         # 회사명 추출
+        
         for company in self.company_names:
             if company in query:
                 # 회사명을 쿼리에서 제거하고 공백 정리
@@ -78,74 +95,21 @@ class QueryRewriter:
             cleaned_query = re.sub(company, '', query).strip()
             return cleaned_query, company
         # ner 회사명 추출후 유사도 기반 회사명 추출
-        ner_pipeline = pipeline("ner",device=0)
-        ner_results = ner_pipeline(query)
-        
-        company_list = []
-        current_company = []
-        for entity in ner_results:
-            if entity['entity'] == "B-ORG":  # 새로운 회사명 시작
-                if current_company:  # 이전 회사명이 있으면 저장
-                    company_name = ''.join(current_company)
-                    company_list.append(company_name)
-                current_company = [entity['word'].replace('##', '')]
-            elif entity['entity'] == "I-ORG":  # 현재 회사명의 연속
-                current_company.append(entity['word'].replace('##', ''))
-        
-        # 마지막 회사명 처리
-        if current_company:
-            company_name = ''.join(current_company)
-            company_list.append(company_name)
-        print(company_list)
+        return query, None
 
-        matches2 = process.extract(company_list[0], self.company_names, limit=1)
-        if matches2 and matches2[0][1] >= 80:
-            company = matches2[0][0]
-            cleaned_query = re.sub(company, '', query).strip()
-            return cleaned_query, company
-        # 유사도 기반 회사명 추출
-        print("---------use similarity---------")
-        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        company_list_embeddings = model.encode(self.company_names)
-        
-        ret_company = []    
-        for company in company_list:
-            company_embedding = model.encode(company)
-            similarities = cosine_similarity([company_embedding], company_list_embeddings)[0]
-            best_company = self.company_names[np.argmax(similarities)]
-            ret_company.append(best_company)
-
-        
-        if len(ret_company) > 0:
-            return query, ret_company
-        elif len(ret_company) == 1:
-            return query, ret_company[0]
-        else:
-            return query, None
-        
-    
     def rewrite_query(self, query: str) -> str:
         """
         쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성합니다.
         """
-        prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query"])
+        prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query", "list"])
         chain = prompt | self.model | self.parser
-        return chain.invoke(query)
-    
-    def decompose_query(self, query: str) -> List[str]:
-        """
-        쿼리를 더 작은 단위로 분해합니다.
-        """
-        prompt = PromptTemplate(template=query_decompose_prompt, input_variables=["query"])
-        chain = prompt | self.model | self.parser
-        return chain.invoke(query)
+        # 회사명 리스트를 문자열로 변환
+        company_list_str = ', '.join(f'"{company}"' for company in self.company_names)
+        list_str = f"[{company_list_str}]"
+        # 딕셔너리로 입력값 전달
+        result = chain.invoke({"query": query, "list": list_str})
+        # 결과가 리스트인 경우 문자열로 변환
+        return result
 
 
-# class MultiqueryRetrieval:
-#     def __init__(self):
-#         self.model = ChatClovaX(model_name="clova/clova-x-large-v2")
-#         self.parser = StrOutputParser()
-#         self.prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query"])
-#         self.decompose_prompt = PromptTemplate(template=query_decompose_prompt, input_variables=["query"])
-        
-        
+

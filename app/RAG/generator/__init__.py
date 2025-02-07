@@ -6,9 +6,9 @@ dotenv.load_dotenv()
 
 def get_llm_api(cfg):
     if cfg.llm_model_source == "openai":
-        from langchain.llms import OpenAI
+        from langchain.chat_models import ChatOpenAI
 
-        return OpenAI(
+        return ChatOpenAI(
             model=cfg.llm_model_name,
             api_key=os.getenv("OPENAI_API_KEY"),
         )  # temperature=0.5, max_tokens=1024

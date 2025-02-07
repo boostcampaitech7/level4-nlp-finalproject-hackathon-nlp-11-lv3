@@ -11,7 +11,7 @@ const InputBox = styled('input')(
     border: none;
     border-radius: 25px;
     display: flex;
-    width: 90%;
+    width: 500%;
     padding: 0 20px;
     `
 )

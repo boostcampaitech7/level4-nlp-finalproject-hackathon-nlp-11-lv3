@@ -3,11 +3,16 @@ from typing import List, Tuple, Optional
 import hydra
 from omegaconf import DictConfig
 from loguru import logger
+import pandas as pd
 import sys
 import os
 from pathlib import Path
 from langchain.prompts import ChatPromptTemplate
 import json
+from functools import lru_cache
+import aiofiles
+from io import StringIO
+from prometheus_client import Counter, Histogram
 from core.config import settings
 from schemas.rag import RetrievalResult, QueryRequest
 from RAG.generator import get_llm_api
@@ -21,12 +26,18 @@ sys.path.append(str(rag_path))
 from RAG.retrieval import DenseRetrieval, BM25Retrieval, EnsembleRetrieval, ChromaRetrieval
 #from RAG.source.generate import generate
 
+# 메트릭 정의
+QUERY_COUNTER = Counter('rag_query_total', 'Total number of RAG queries')
+QUERY_LATENCY = Histogram('rag_query_latency_seconds', 'RAG query latency in seconds')
+RETRIEVAL_LATENCY = Histogram('rag_retrieval_latency_seconds', 'Document retrieval latency')
+
 class RAGService:
     def __init__(self):
         """RAG 서비스 초기화"""
         self._load_config()
         self._init_retrievers()
         self._init_generator()
+        self._init_cache()
         
     def _load_config(self):
         """Hydra 설정 로드"""
@@ -47,17 +58,7 @@ class RAGService:
     def _init_retrievers(self):
         """검색 모델 초기화"""
         try:
-            # # Dense Retrieval 초기화
-            # self.dense_retriever = DenseRetrieval(self.cfg)
             
-            # # BM25 Retrieval 초기화
-            # self.bm25_retriever = BM25Retrieval(self.cfg)
-            
-            # # Ensemble Retrieval 초기화
-            # self.ensemble_retriever = EnsembleRetrieval(
-            #     retrievers=[self.dense_retriever, self.bm25_retriever],
-            #     weights=[0.7, 0.3]  # 가중치는 설정에 따라 조정 가능
-            # )
             self.ensemble_retriever = ChromaRetrieval(self.cfg)
             logger.info("Successfully initialized all retrievers")
             
@@ -74,76 +75,67 @@ class RAGService:
             logger.error(f"Error initializing generator: {str(e)}")
             raise
     
-    async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
-        """
-        사용자 쿼리 처리
+    def _init_cache(self):
+        """캐시 초기화"""
+        self.query_cache = {}
         
-        Args:
-            request: QueryRequest - 사용자 요청
-            
-        Returns:
-            Tuple[str, List[RetrievalResult], float, str] - (답변, 검색된 문서들, 처리 시간, 회사명)
-        """
+    @lru_cache(maxsize=1000)
+    def _get_cached_retrieval(self, query: str) -> List[RetrievalResult]:
+        """검색 결과 캐싱"""
+        return self.ensemble_retriever.get_relevant_documents(
+            query=query,
+            k=15
+        )
+
+    async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
+        QUERY_COUNTER.inc()
         start_time = time.time()
         
         try:
-            # Ensemble 검색 수행
-            logger.info(f"Retrieving documents for query: {request.query}")
-            retrieved_docs = self.ensemble_retriever.get_relevant_documents(
-                query=request.query,
-                #top_k=self.cfg.retrieval.top_k
-                k = 10
-            )
-            # 검색된 문서들을 하나의 문자열로 결합
+            with RETRIEVAL_LATENCY.time():
+                retrieved_docs = self._get_cached_retrieval(request.query)
+            
             docs_text = ""
             retrieval_results = []
-            def fix_path(path: str) -> str:
-                path = path.replace('page_page_', 'page_')
-                if path.endswith('.json.json'):
-                    path = path[:-5]  
-                    
-                return path
-            cnt = 0
-            for doc in retrieved_docs:
-                if doc.metadata.get('category') == 'table':
-                    cnt += 1
-                    # path ocr_results/한화솔루션/한화솔루션_하나증권(2024.10.31)/page_page_2/5_table_2_result.json.json'
-                    doc_path = doc.metadata.get('path')
-                    # 마지막 확장자 제거
-                    doc_path = fix_path(doc_path)
-                    with open(os.path.join('../PDF_OCR' + doc_path), 'r') as f:
-                        json_data = json.load(f)
-                    html_text = json_data["content"]["html"]
-                    docs_text += f"테이블 데이터 : {html_text}\n"
-                    
-                else:
-                    docs_text += doc.page_content
-                """
-                metadat 예시 
-                {
-                    'category' : 'text',
-                    'company' :  '네이버',
-                    'date' : '2024.01.01',
-                    'page' : '1',
-                    'path' : 'data/path/to/file.pdf',
-                    'securities' : 'SK증권'
-                }
-                """
+            
+            async def process_doc(doc):
                 retrieval_results.append(
                     RetrievalResult(
                         content=doc.page_content,
                         metadata=doc.metadata,
-                        score=float(doc.metadata.get('score', 1.0)),  # 기본값 1.0
-                        company = doc.metadata.get('company', 'unknown'),
-                        source = f"{doc.metadata.get('company', 'unknown')}_{doc.metadata.get('securities', 'unknown')}_{doc.metadata.get('date', 'unknown')}_page{doc.metadata.get('page', 'unknown')}_{doc.metadata.get('category', 'unknown')}"  # 기본값 'unknown'
+                        score=float(doc.metadata.get('score', 1.0)),
+                        company=doc.metadata.get('company', 'unknown'),
+                        source=f"{doc.metadata.get('company', 'unknown')}_{doc.metadata.get('securities', 'unknown')}_{doc.metadata.get('date', 'unknown')}_page{doc.metadata.get('page', 'unknown')}_{doc.metadata.get('category', 'unknown')}"
                     )
                 )
-                if cnt == 1:
-                    break
-                    
-            # print("#########################")
-            # print(docs_text)
-            # print("#########################")
+                
+                if doc.metadata.get('category') == 'table':
+                    try:
+                        doc_path = self._fix_path(doc.metadata.get('path'))
+                        doc_path = '../PDF_OCR' + doc_path
+                        table_path = doc_path.replace('.json', '.csv')
+                        
+                        if os.path.exists(table_path):
+                            async with aiofiles.open(table_path, mode='r') as f:
+                                content = await f.read()
+                                df = pd.read_csv(StringIO(content))
+                                return f"테이블 데이터 :\n {df.to_string(index=False)}\n"
+                    except Exception as e:
+                        logger.error(f"Error processing table document: {str(e)}")
+                        return "테이블 데이터를 처리하는 중 오류가 발생했습니다."
+                return doc.page_content
+            
+            # 병렬로 문서 처리
+            from asyncio import gather
+            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:10]])
+            docs_text = "\n".join(processed_contents)
+            
+            if not retrieval_results:  # retrieval_results가 비어있는 경우 처리
+                logger.warning("No retrieval results found")
+                company = "unknown"
+            else:
+                company = retrieval_results[0].company
+            
             # ClovaX 모델 초기화 및 답변 생성
             llm = get_llm_api(self.cfg)
             
@@ -159,15 +151,27 @@ class RAGService:
             # 답변 생성
             answer = llm.invoke(prompt)
             
-            company = retrieval_results[0].company
             answer_text = answer.content
             
-            logger.info("Successfully generated answer using ClovaX")
+            logger.info(f"Successfully generated answer using {self.cfg.llm_model_name}")
             processing_time = time.time() - start_time
             logger.info(f"Query processed in {processing_time:.2f} seconds")
             
             return answer_text, retrieval_results, processing_time, company
             
         except Exception as e:
-            logger.error(f"Error processing query: {str(e)}")
-            raise 
+            logger.error(f"Error processing query: {str(e)}", exc_info=True)
+            raise
+        finally:
+            processing_time = time.time() - start_time
+            QUERY_LATENCY.observe(processing_time)
+            
+        return answer_text, retrieval_results, processing_time, company
+
+    def _fix_path(self, path: str) -> str:
+        path = path.replace('page_page_', 'page_')
+        if path.endswith('.json.json'):
+            path = path[:-5]  
+            
+        return path
+        

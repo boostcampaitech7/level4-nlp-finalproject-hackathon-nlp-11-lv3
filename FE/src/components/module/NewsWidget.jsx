@@ -46,7 +46,7 @@ export default function NewsWidget() {
     }, [newsData]);
 
     return (
-        <CustomContainer color="303032" radius="8" width="100" height="auto">
+        <CustomContainer color="303032" radius="8" width="190px" height="auto">
             {newsData.length > 0 ? (
                 <CustomText size="xxs" mx="15">
                     {newsData[currentIndex].title}

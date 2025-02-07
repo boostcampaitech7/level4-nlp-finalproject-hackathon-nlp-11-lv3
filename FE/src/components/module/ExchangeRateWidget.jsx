@@ -69,7 +69,7 @@ export default function ExchangeRateWidget() {
 
   if (loading) {
     return (
-      <CustomContainer color="303032" radius="8" flexDirection="column" width="80" height="210" my="8">
+      <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
         <Box>Loading...</Box>
       </CustomContainer>
     );
@@ -77,14 +77,14 @@ export default function ExchangeRateWidget() {
 
   if (error) {
     return (
-      <CustomContainer color="303032" radius="8" flexDirection="column" width="80" height="210" my="8">
+      <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
         <Box>Error: {error}</Box>
       </CustomContainer>
     );
   }
 
   return (
-    <CustomContainer color="303032" radius="8" flexDirection="column" width="80" height="210" my="8">
+    <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
       <Box sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', marginTop: '5px' }}>
         <ExchangeRateBox rate={rateData.USD?.toFixed(2)} yesterdayRate={yesterdayRateData.USD?.toFixed(2)}>USD</ExchangeRateBox>
         <ExchangeRateBox rate={rateData.JPY?.toFixed(2)} yesterdayRate={yesterdayRateData.JPY?.toFixed(2)}>JPY 100</ExchangeRateBox>

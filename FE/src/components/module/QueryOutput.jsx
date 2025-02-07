@@ -51,7 +51,7 @@ export default function QueryOutput({ children, answer }) {
     }, [answer]);
 
     return (
-        <CustomContainer color='191A1A' radius='25' width='85' height='auto' flexDirection='column' justifyContent='flex-start' padding='20' my='10'>
+        <CustomContainer color='191A1A' radius='25' width='85%' height='auto' flexDirection='column' justifyContent='flex-start' padding='20' my='10%'>
             <CustomText color='blur' weight='bold' size='m' justifyContent='flex-start' my='45' mx='25'>
                 {children}
             </CustomText>

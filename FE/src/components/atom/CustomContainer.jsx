@@ -6,14 +6,14 @@ const CustomBox = styled(Box)(
     background-color: #${color};
     color: #ffffff;
     font-family: Pretendard-Regular;
-    width: ${width}%;
+    width: ${width};
     height: ${height}px;
     border-radius: ${radius}px;
     display: flex;
     flex-direction: ${flexDirection};
     justify-content: ${getJustifyContent(justifyContent)};
     alight-items: center;
-    margin: ${my}% 0 0 0;
+    margin: ${my} 0 0 0;
     padding: 0 ${padding}px;
     border: ${getBorder(border)};
     `

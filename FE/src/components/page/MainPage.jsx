@@ -8,7 +8,6 @@ import IndexWidget from '../module/IndexWidget';
 import ExchangeRateWidget from '../module/ExchangeRateWidget';
 import NewsWidget from '../module/NewsWidget';
 import QueryInput from '../module/QueryInput';
-import FileUpload from '../module/FileUpload';
 import SelectModel from '../module/SelectModel';
 
 export default function MainPage() {
@@ -19,12 +18,10 @@ export default function MainPage() {
   };
 
   useEffect(() => {
-    console.log(model);
   }, [model])
 
   return (
     <Box sx={{display: 'flex'}}>
-      {/* <FileUpload /> */}
       <SideBar>
         <IndexWidget />
         <ExchangeRateWidget />

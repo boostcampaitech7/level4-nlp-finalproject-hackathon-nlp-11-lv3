@@ -46,23 +46,25 @@ export default function StockWidget() {
         serviceKey: apiKey,
         resultType: 'json',
         endBasDt: currentDate,
-        likeItmsNm: 'NAVER'
+        likeItmsNm: 'NAVER',
+        numOfRows: 2,
+        pageNo: 1,
       } 
     })
     .then(getStockSuccess);
   } 
 
-  function getFinan() {
-    axios.get(URL, {
-      params: {
-        serviceKey: apiKey,
-        resultType: 'json',
-        endBasDt: currentDate,
-        likeItmsNm: 'NAVER'
-      } 
-    })
-    .then(getStockSuccess);
-  } 
+  // function getFinan() {
+  //   axios.get(URL, {
+  //     params: {
+  //       serviceKey: apiKey,
+  //       resultType: 'json',
+  //       endBasDt: currentDate,
+  //       likeItmsNm: 'NAVER'
+  //     } 
+  //   })
+  //   .then(getStockSuccess);
+  // } 
 
   useEffect(() => {
     getStock();
@@ -71,8 +73,8 @@ export default function StockWidget() {
   return (
     <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', alignItems: 'center' }}>
       {stockData ? (
-        <Box sx={{ display: 'flex', width: '80%', flexDirection: 'column' }}>
-          <CustomContainer color='303032' radius='8' width='100' height='210' flexDirection='column' my='90'>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='50px'>
             <CustomText weight='bold' my='-8'>{stockData.itmsNm}</CustomText>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
               <CustomText size='xxs' color='second' mx='4'>{stockData.srtnCd}</CustomText>
@@ -85,7 +87,7 @@ export default function StockWidget() {
             </Box>
           </CustomContainer>       
 
-          <CustomContainer color='303032' radius='8' width='100' height='210' flexDirection='column' justifyContent='flex-start' my='10'>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' justifyContent='flex-start' my='20px'>
             <CustomText size='s' weight='bold' my='5' textAlign='start'>시세정보</CustomText>
             <StockInfoBox text='시가' value={new Intl.NumberFormat().format(stockData.mkp)} color={stockData.yesterdayClpr < stockData.mkp ? 'up' : 'down'} />
             <StockInfoBox text='오늘 최고' value={new Intl.NumberFormat().format(stockData.hipr)} color={stockData.yesterdayClpr < stockData.hipr ? 'up' : 'down'} />
@@ -93,13 +95,18 @@ export default function StockWidget() {
             <CustomText size='s' weight='bold' my='10'>종목정보</CustomText>
             <StockInfoBox text='시가 총액(억원)' value={new Intl.NumberFormat().format(stockData.mrktTotAmt.slice(0,-8))} />
             <StockInfoBox text='거래량' value={new Intl.NumberFormat().format(stockData.trqu)} />
-            <StockInfoBox text='PER' value={0} />
+            {/* <StockInfoBox text='PER' value={0} /> */}
           </CustomContainer> 
         </Box>
       ) : (
-        <CustomContainer color='303032' radius='8' width='100' height='250' flexDirection='column' my='90'>
-          <CustomText size='xs'>Loading...</CustomText>
-        </CustomContainer>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='50px'>
+            <CustomText size='xs'>Loading ..</CustomText>
+          </CustomContainer>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='20px'>
+            <CustomText size='xs'>Loading ..</CustomText>
+          </CustomContainer>
+        </Box>
       )}
     </Box>
   );

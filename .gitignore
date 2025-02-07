@@ -30,3 +30,6 @@ __pycache__/
 *.pickle
 
 test.sh
+
+passage_encoder/
+query_encoder/

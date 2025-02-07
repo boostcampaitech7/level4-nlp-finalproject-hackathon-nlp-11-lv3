@@ -1,5 +1,6 @@
 from typing import Any, Callable, Dict, List, Tuple
 
+import argparse
 import os
 import re
 import shutil
@@ -7,19 +8,16 @@ from collections import defaultdict
 from functools import cmp_to_key
 from pathlib import Path
 
-
 import cv2
 import huggingface_hub
 import numpy as np
 import pandas as pd
 import torch
+from config import get_config
 from doclayout_yolo import YOLOv10
+from huggingface_hub import hf_hub_download  # 상단에 import 추가
 from pdf2image import convert_from_path
 from tqdm import tqdm
-from config import get_config
-import argparse
-from huggingface_hub import hf_hub_download  # 상단에 import 추가
-
 
 
 def pdf_to_image(pdf_path: str, save_path: str, db_path: str, verbose: bool = False) -> None:
@@ -250,12 +248,11 @@ def sort_bounding_boxes(output_data, image_width):
 
         return sorted_boxes
 
-       
 
 def extract_and_save_bounding_boxes(
     image_path,
     database_path,
-    model_path = "~/.cache/huggingface/hub/models--juliozhao--DocLayout-YOLO-DocStructBench/snapshots/8c3299a30b8ff29a1503c4431b035b93220f7b11/doclayout_yolo_docstructbench_imgsz1024.pt",
+    model_path="~/.cache/huggingface/hub/models--juliozhao--DocLayout-YOLO-DocStructBench/snapshots/8c3299a30b8ff29a1503c4431b035b93220f7b11/doclayout_yolo_docstructbench_imgsz1024.pt",
     res_path="outputs",
     imgsz=1024,
     line_width=5,
@@ -268,18 +265,15 @@ def extract_and_save_bounding_boxes(
     # Automatically select device
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-    
-  
     try:
         model = YOLOv10(model_path)
-       
+
     except Exception as e:
         print(f"지정된 경로에서 모델을 로드할 수 없습니다: {e}")
         print("Hugging Face에서 모델을 다운로드합니다...")
         try:
             model_path = hf_hub_download(
-                repo_id="juliozhao/DocLayout-YOLO-DocStructBench",
-                filename="doclayout_yolo_docstructbench_imgsz1024.pt"
+                repo_id="juliozhao/DocLayout-YOLO-DocStructBench", filename="doclayout_yolo_docstructbench_imgsz1024.pt"
             )
             model = YOLOv10(model_path)
             print(f"모델을 성공적으로 다운로드했습니다: {model_path}")
@@ -550,20 +544,20 @@ def multi_extract_and_save_bounding_boxes(
 
 
 def pdf_parsing_pipeline(config=None) -> None:
-    
-    # 설정 
+
+    # 설정
     cfg = get_config(config)
-    
+
     # 경로 설정
     root_dir = cfg["DIRS"]["input_dir"]
     db_path = os.path.join(cfg["DIRS"]["database_dir"], cfg["FILES"]["database"])
     ocr_output_dir = cfg["DIRS"]["ocr_output_dir"]
-    
+
     # PDF -> 이미지 변환
     multi_pdf_to_image(root_dir=root_dir, db_path=db_path)
 
     # 데이터베이스 백업
-    shutil.copy(db_path, db_path.replace('.csv', '_temp.csv'))
+    shutil.copy(db_path, db_path.replace(".csv", "_temp.csv"))
 
     # 이미지 -> 바운딩 박스 추출
     multi_extract_and_save_bounding_boxes(
@@ -582,79 +576,68 @@ def pdf_parsing_pipeline(config=None) -> None:
 
     # OCR 처리
     from ocr_processor import OCRProcessor
-    processor = OCRProcessor(
-        base_folder=root_dir,
-        output_folder=ocr_output_dir
-    )
+
+    processor = OCRProcessor(base_folder=root_dir, output_folder=ocr_output_dir)
     processor.process_folders()
 
     print("전체 파이프라인 처리가 완료되었습니다.")
+
 
 def parse_args():
     """
     커맨드 라인 인자를 파싱합니다.
     """
-    parser = argparse.ArgumentParser(description='PDF 파일을 처리하여 OCR을 수행하는 파이프라인')
-    
+    parser = argparse.ArgumentParser(description="PDF 파일을 처리하여 OCR을 수행하는 파이프라인")
+
+    parser.add_argument("--input", "-i", type=str, help="입력 PDF 파일 또는 PDF 파일들이 있는 디렉토리 경로")
+
     parser.add_argument(
-        '--input', '-i',
-        type=str,
-        help='입력 PDF 파일 또는 PDF 파일들이 있는 디렉토리 경로'
+        "--output-dir", "-o", type=str, default=None, help="결과물을 저장할 디렉토리 (기본값: 프로젝트 루트 디렉토리)"
     )
-    
-    parser.add_argument(
-        '--output-dir', '-o',
-        type=str,
-        default=None,
-        help='결과물을 저장할 디렉토리 (기본값: 프로젝트 루트 디렉토리)'
-    )
-    
-    parser.add_argument(
-        '--recursive', '-r',
-        action='store_true',
-        help='디렉토리 입력시 하위 디렉토리도 처리'
-    )
-    
+
+    parser.add_argument("--recursive", "-r", action="store_true", help="디렉토리 입력시 하위 디렉토리도 처리")
+
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_args()
-    
+
     # 입력 경로 처리
     input_path = Path(args.input).resolve() if args.input else None
     if not input_path or not input_path.exists():
         raise ValueError(f"입력 경로가 유효하지 않습니다: {args.input}")
-    
+
     # 출력 디렉토리 설정
     if args.output_dir:
         output_base = Path(args.output_dir).resolve()
     else:
         output_base = Path(__file__).parent
-    
+
     # 설정 구성
     custom_config = {
         "DIRS": {
             "input_dir": str(input_path.parent if input_path.is_file() else input_path),
             "output_dir": str(output_base / "output"),
             "database_dir": str(output_base / "database"),
-            "ocr_output_dir": str(output_base / "ocr_results")
+            "ocr_output_dir": str(output_base / "ocr_results"),
         }
     }
-    
+
     # PDF 파일 처리
-    if input_path.is_file() and input_path.suffix.lower() == '.pdf':
+    if input_path.is_file() and input_path.suffix.lower() == ".pdf":
         # 단일 PDF 파일 처리
         if not input_path.parent.samefile(Path(custom_config["DIRS"]["input_dir"])):
             # 입력 디렉토리로 PDF 파일 복사
             os.makedirs(custom_config["DIRS"]["input_dir"], exist_ok=True)
             shutil.copy2(input_path, Path(custom_config["DIRS"]["input_dir"]) / input_path.name)
-    
+
     elif input_path.is_dir():
         # 입력 디렉토리가 처리 디렉토리와 다른 경우에만 파일 복사
         if not input_path.samefile(Path(custom_config["DIRS"]["input_dir"])):
             # 디렉토리 생성
             os.makedirs(custom_config["DIRS"]["input_dir"], exist_ok=True)
-            
+
             # PDF 파일 복사
             if args.recursive:
                 # 재귀적으로 모든 PDF 파일 복사
@@ -669,6 +652,6 @@ if __name__ == "__main__":
                     target_path = Path(custom_config["DIRS"]["input_dir"]) / pdf_file.name
                     os.makedirs(target_path.parent, exist_ok=True)
                     shutil.copy2(pdf_file, target_path)
-    
+
     # 파이프라인 실행
     pdf_parsing_pipeline(custom_config)

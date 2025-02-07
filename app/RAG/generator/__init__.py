@@ -1,8 +1,9 @@
 import os
+
 import dotenv
 
-
 dotenv.load_dotenv()
+
 
 def get_llm_api(cfg):
     if cfg.llm_model_source == "openai":
@@ -15,7 +16,9 @@ def get_llm_api(cfg):
 
     elif cfg.llm_model_source == "naver":
         from langchain_community.chat_models import ChatClovaX
+
         from .ClovaStudioExcecutor import ClovaStudioExecutor
+
         os.environ["NCP_CLOVASTUDIO_API_KEY"] = os.getenv("NCP_CLOVASTUDIO_API_KEY")
         os.environ["NCP_CLOVASTUDIO_REQUEST_ID"] = os.getenv("NCP_CLOVASTUDIO_REQUEST_ID")
         os.environ["NCP_APIGW_API_KEY"] = os.getenv("NCP_APIGW_API_KEY")

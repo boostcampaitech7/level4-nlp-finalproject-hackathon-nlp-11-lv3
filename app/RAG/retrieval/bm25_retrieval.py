@@ -1,12 +1,12 @@
 from typing import List
-import numpy as np
+
 import os
 import pickle
 
+import numpy as np
 from data import get_docs
 from langchain.docstore.document import Document
 from rank_bm25 import BM25Okapi
-
 from retrieval.base import BaseRetriever
 from retrieval.reranking import get_reranker_model
 

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class QueryRequest(BaseModel):
     query: str = Field(..., description="사용자의 질문")
@@ -7,17 +9,20 @@ class QueryRequest(BaseModel):
     temperature: Optional[float] = Field(default=0.7, description="생성 텍스트의 다양성 (0.0 ~ 1.0)")
     company: Optional[str] = None
 
+
 class RetrievalResult(BaseModel):
     content: str = Field(..., description="검색된 문서 내용")
     company: str = Field(..., description="문서 소속 기업")
     score: float = Field(..., description="검색 점수")
     source: str = Field(..., description="문서 출처")
 
+
 class QueryResponse(BaseModel):
     answer: str = Field(..., description="생성된 답변")
     retrieved_documents: List[RetrievalResult] = Field(..., description="검색된 관련 문서들")
-    processing_time: float = Field(..., description="처리 시간 (초)") 
+    processing_time: float = Field(..., description="처리 시간 (초)")
     company: Optional[str] = None
+
 
 class ChatRequest(BaseModel):
     query: str = Field(..., description="사용자의 질문")
@@ -26,15 +31,16 @@ class ChatRequest(BaseModel):
     company: Optional[str] = None
     chat_history: Optional[List[dict]] = None
 
+
 class ChatResponse(BaseModel):
     answer: str = Field(..., description="생성된 답변")
     retrieved_documents: List[RetrievalResult] = Field(..., description="검색된 관련 문서들")
-    processing_time: float = Field(..., description="처리 시간 (초)") 
+    processing_time: float = Field(..., description="처리 시간 (초)")
     company: Optional[str] = None
+
 
 class DocumentResponse(BaseModel):
     message: str
     filename: str
     company: Optional[str] = None
     upload_time: Optional[str] = None
-

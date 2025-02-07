@@ -1,12 +1,12 @@
 # retrieval/dense_retriever.py
 from typing import List
+
 import os
 
 from data import get_docs
-from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
+from langchain_community.vectorstores import FAISS
 from retrieval.base import BaseRetriever
 from retrieval.embedding_model import get_embedding_model
 from retrieval.reranking import get_reranker_model

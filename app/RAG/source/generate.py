@@ -1,6 +1,5 @@
 import pandas as pd
 import tqdm
-
 from generator import get_llm_api
 from langchain.prompts import ChatPromptTemplate
 from omegaconf import DictConfig

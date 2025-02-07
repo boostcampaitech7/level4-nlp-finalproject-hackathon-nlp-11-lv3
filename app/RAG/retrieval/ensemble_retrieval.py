@@ -1,7 +1,7 @@
 from typing import List
+
 import numpy as np
 from langchain.docstore.document import Document
-
 from retrieval.base import BaseRetriever
 
 

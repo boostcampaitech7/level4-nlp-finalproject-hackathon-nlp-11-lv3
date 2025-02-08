@@ -8,7 +8,6 @@ import CustomContainer from '../atom/CustomContainer'
 import StockInfoBox from './StockInfoBox'
 
 const URL = 'https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo';
-// const EPSURL = 'https://apis.data.go.kr/1160100/service/GetFinaStatInfoService/getFinaStatInfo';
 const apiKey = import.meta.env.VITE_STOCK_API_KEY;
 const currentDate = moment().format('YYYYMMDD');
 
@@ -54,21 +53,9 @@ export default function StockWidget( { company }) {
     .then(getStockSuccess);
   } 
 
-  // function getFinan() {
-  //   axios.get(URL, {
-  //     params: {
-  //       serviceKey: apiKey,
-  //       resultType: 'json',
-  //       endBasDt: currentDate,
-  //       likeItmsNm: 'NAVER'
-  //     } 
-  //   })
-  //   .then(getStockSuccess);
-  // } 
-
   useEffect(() => {
     getStock();
-  }, [])
+  }, [company])
 
   return (
     <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', alignItems: 'center' }}>
@@ -88,14 +75,13 @@ export default function StockWidget( { company }) {
           </CustomContainer>       
 
           <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' justifyContent='flex-start' my='20px'>
-            <CustomText size='s' weight='bold' my='5' textAlign='start'>시세정보</CustomText>
+            <CustomText size='s' weight='bold' my='10' textAlign='start'>시세정보</CustomText>
             <StockInfoBox text='시가' value={new Intl.NumberFormat().format(stockData.mkp)} color={stockData.yesterdayClpr < stockData.mkp ? 'up' : 'down'} />
             <StockInfoBox text='오늘 최고' value={new Intl.NumberFormat().format(stockData.hipr)} color={stockData.yesterdayClpr < stockData.hipr ? 'up' : 'down'} />
             <StockInfoBox text='오늘 최저' value={new Intl.NumberFormat().format(stockData.lopr)} color={stockData.yesterdayClpr < stockData.lopr ? 'up' : 'down'} />
             <CustomText size='s' weight='bold' my='10'>종목정보</CustomText>
             <StockInfoBox text='시가 총액(억원)' value={new Intl.NumberFormat().format(stockData.mrktTotAmt.slice(0,-8))} />
             <StockInfoBox text='거래량' value={new Intl.NumberFormat().format(stockData.trqu)} />
-            {/* <StockInfoBox text='PER' value={0} /> */}
           </CustomContainer> 
         </Box>
       ) : (

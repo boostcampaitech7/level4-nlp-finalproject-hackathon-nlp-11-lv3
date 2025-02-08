@@ -32,7 +32,9 @@ export default function ChatPage() {
 
   const query = location.state?.query;
   const model = location.state?.model || 'GPT-4o-mini';
-  const [answer, setAnswer] = useState();
+
+  const [queries, setQueries] = useState([query]);
+  const [answers, setAnswers] = useState([]);
   const [company, setCompany] = useState('');
 
   const max_tokens = 1000;
@@ -42,17 +44,20 @@ export default function ChatPage() {
     navigate('/');
   }
 
-  function requestApi() {
+  function handleQuerySubmit(newQuery) {
+    setQueries((prev) => [...prev, newQuery]);
+    requestApi(newQuery);
+  }
+
+  function requestApi(query) {
     requestQuery(
         query,
         model,
         max_tokens,
         temperature,
-        (res) => {
-            console.log(res);
-            
+        (res) => {            
             setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
-            setAnswer(res.data.answer);
+            setAnswers((prev) => [...prev, res.data.answer]);
         },
         (err) => console.log('requestQueryFail:', err)
     );
@@ -61,7 +66,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!hasFetched.current && query) {
       hasFetched.current = true;
-      requestApi();
+      requestApi(query);
     }
   }, [query]);
 
@@ -75,9 +80,13 @@ export default function ChatPage() {
         </Box>
       </SideBar>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100vw', marginBottom: '40px' }}>
-        <QueryOutput answer={answer || ''}>{query}</QueryOutput>
-        <QueryInput height='95' />
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100vw', margin: '60px 0 40px 0' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', width: '90%', height: '600px', overflowY: 'auto' }}>
+          {queries.map((q, idx) => (
+            <QueryOutput key={idx} answer={answers[idx] || ''}>{q}</QueryOutput>
+          ))}
+        </Box>
+        <QueryInput height='95' onQuerySubmit={handleQuerySubmit} />
       </Box>
     </Box>
   );

@@ -23,7 +23,7 @@ const IconBox = styled(Box) (
     `
 )
 
-export default function QueryInput({ height, model }) {
+export default function QueryInput({ height, model, mode, onQuerySubmit }) {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
@@ -31,14 +31,20 @@ export default function QueryInput({ height, model }) {
     const [query, setQuery] = useState('');
 
     function onKeyUp(e) {
-        if (e.key == 'Enter' && query) {
+        if (e.key == 'Enter' && query.trim()) {
             onClickSearch();
         }
     }
 
-    function onClickSearch() {
-        if (query) {
-            navigate('/chat', { state: { query, model } });
+    function onClickSearch() {     
+        if (query.trim()) {
+            if (mode === 'main') {
+                navigate('/chat', { state: { query, model } });
+            }
+            else if (onQuerySubmit) {
+                onQuerySubmit(query);
+                setQuery('');
+            }
         }
     }
 
@@ -52,8 +58,7 @@ export default function QueryInput({ height, model }) {
         setFile(e.target.files[0]);
     }
 
-    function uploadFileSuccess(res) {
-        console.log('file upload success: ', res);             
+    function uploadFileSuccess(res) {       
     }
 
     function uploadFileFail(res) {
@@ -61,17 +66,11 @@ export default function QueryInput({ height, model }) {
     }    
 
     useEffect(() => {
-        if (file) {
-        console.log(file);
-        
+        if (file) {        
             const formData = new FormData();
             formData.append('file', file);
 
-            uploadFile(
-                formData,
-                uploadFileSuccess,
-                uploadFileFail
-            );
+            uploadFile(formData, uploadFileSuccess, uploadFileFail);
         }
     }, [file])
 

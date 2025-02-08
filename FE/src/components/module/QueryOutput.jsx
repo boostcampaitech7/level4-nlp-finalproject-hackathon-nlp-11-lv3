@@ -6,6 +6,7 @@ import CustomText from '../atom/CustomText';
 
 import CopyIcon from '../../assets/icon/copy.png'
 import ReloadIcon from '../../assets/icon/reload.png'
+import LoadingIcon from '../../assets/icon/spinner.gif'
 
 const IconBox = styled(Box) (
     () => `
@@ -22,7 +23,7 @@ const IconBox = styled(Box) (
 
 export default function QueryOutput({ children, answer }) {    
     const [displayedText, setDisplayedText] = useState('');
-    
+
     function onClickCopy() {
         navigator.clipboard.writeText(answer);
     }
@@ -54,11 +55,19 @@ export default function QueryOutput({ children, answer }) {
                 {children}
             </CustomText>
             
-            <CustomText size='s' weight='bold' justifyContent='flex-start' mx='5'>
-                💡 답변
-            </CustomText>
+            {displayedText ? 
+                <Box sx={{ display: 'flex', height: '50px', margin: '-10px 0 10px 0' }}>
+                    <CustomText size='s' weight='bold' justifyContent='flex-start' mx='15'>💡</CustomText>
+                    <CustomText size='s' weight='bold' justifyContent='flex-start'>답변</CustomText>
+                </Box>
+                :
+                <Box sx={{ display: 'flex', height: '50px', margin: '-10px 0 10px 0' }}>
+                    <img src={LoadingIcon} style={{ width: '50px', height: '100%' }} />
+                    <CustomText size='s' weight='bold' justifyContent='flex-start' mx='-1'>hmm .. 생각중</CustomText>
+                </Box>
+            }
             
-            <CustomText size='xs' justifyContent='flex-start' textAlign='start' my='20' mx='25'>
+            <CustomText size='xs' justifyContent='flex-start' textAlign='start' my='10' mx='25'>
                 {displayedText}
             </CustomText>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%'}}>

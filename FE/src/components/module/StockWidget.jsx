@@ -8,11 +8,11 @@ import CustomContainer from '../atom/CustomContainer'
 import StockInfoBox from './StockInfoBox'
 
 const URL = 'https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo';
-const EPSURL = 'https://apis.data.go.kr/1160100/service/GetFinaStatInfoService/getFinaStatInfo';
+// const EPSURL = 'https://apis.data.go.kr/1160100/service/GetFinaStatInfoService/getFinaStatInfo';
 const apiKey = import.meta.env.VITE_STOCK_API_KEY;
 const currentDate = moment().format('YYYYMMDD');
 
-export default function StockWidget() {
+export default function StockWidget( { company }) {
   const [stockData, setStockData] = useState();
 
   function getStockSuccess(res) {
@@ -46,7 +46,7 @@ export default function StockWidget() {
         serviceKey: apiKey,
         resultType: 'json',
         endBasDt: currentDate,
-        likeItmsNm: 'NAVER',
+        likeItmsNm: company,
         numOfRows: 2,
         pageNo: 1,
       } 

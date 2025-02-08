@@ -113,14 +113,12 @@ class VectorStore:
         모든 데이터를 통합하여 벡터 DB를 업데이트합니다.
         """
         # JSON 데이터 로드
-        if text_json_path == table_json_path:
-            all_data = self.load_json_data(text_json_path)
-        else:
-            text_data = self.load_json_data(text_json_path)
-            table_data = self.load_json_data(table_json_path)
+
+        text_data = self.load_json_data(text_json_path)
+        table_data = self.load_json_data(table_json_path)
 
         # 모든 데이터 통합
-            all_data = text_data + table_data
+        all_data = text_data + table_data
         documents = self.create_documents(all_data)
         # 모든 데이터를 통합한 벡터 DB 업데이트
         company_persist_dir = os.path.join(self.persist_directory, "All_data")

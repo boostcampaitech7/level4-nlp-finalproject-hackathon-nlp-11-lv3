@@ -31,5 +31,6 @@ __pycache__/
 
 test.sh
 
+dist/
 passage_encoder/
 query_encoder/

@@ -3,14 +3,14 @@ from typing import List, Optional
 import os
 import shutil
 from datetime import datetime
-
+import time
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from loguru import logger
 from schemas.rag import DocumentResponse
-from services.rag_service import RAGService
+from services.pdf_service import PDFService
 
 router = APIRouter()
-rag_service = RAGService()
+rag_service = PDFService()
 
 # PDF 저장 경로 설정
 UPLOAD_DIR = "../PDF_OCR/pdf"
@@ -22,13 +22,18 @@ async def upload_document(file: UploadFile = File(...), company: Optional[str] =
     try:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{file.filename}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        
+        # company가 None이면 기본 디렉토리 사용
+        save_dir = os.path.join(UPLOAD_DIR, company) if company else UPLOAD_DIR
+        os.makedirs(save_dir, exist_ok=True)
+        
+        file_path = os.path.join(save_dir, filename)
 
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        await rag_service.process_document(file_path, company)
-
+        rag_service.process_pdf(file_path, company)
+        
         return DocumentResponse(
             message="Document uploaded and processed successfully",
             filename=filename,

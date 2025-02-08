@@ -1,17 +1,19 @@
 import os
+from typing import Optional
 
 import dotenv
 
 dotenv.load_dotenv()
 
 
-def get_llm_api(cfg):
+def get_llm_api(cfg, temperature: Optional[int] = 0.5):
     if cfg.llm_model_source == "openai":
         from langchain.chat_models import ChatOpenAI
 
         return ChatOpenAI(
             model=cfg.llm_model_name,
             api_key=os.getenv("OPENAI_API_KEY"),
+            temperature=temperature,
         )  # temperature=0.5, max_tokens=1024
 
     elif cfg.llm_model_source == "naver":

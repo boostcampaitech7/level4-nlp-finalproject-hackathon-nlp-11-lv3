@@ -16,8 +16,8 @@ const InputBox = styled('input')(
     `
 )
 
-export default function InputText({ type, placeholder, onChange, autoFocus, onKeyUp }) {
+export default function InputText({ placeholder, onChange, autoFocus, onKeyUp, value }) {
     return (
-        <InputBox type={type} placeholder={placeholder} onChange={onChange} autoFocus={autoFocus} onKeyUp={onKeyUp} />
+        <InputBox placeholder={placeholder} onChange={onChange} autoFocus={autoFocus} onKeyUp={onKeyUp} value={value} />
     )
 }

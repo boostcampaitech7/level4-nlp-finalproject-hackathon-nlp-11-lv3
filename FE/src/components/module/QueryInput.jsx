@@ -43,7 +43,7 @@ export default function QueryInput({ height, model, mode, onQuerySubmit }) {
             }
             else if (onQuerySubmit) {
                 onQuerySubmit(query);
-                setQuery('');
+                setQuery('');                
             }
         }
     }
@@ -76,7 +76,7 @@ export default function QueryInput({ height, model, mode, onQuerySubmit }) {
 
     return (
         <CustomContainer color='212222' radius='25' width='80%' height={height} padding='20'>
-            <InputText placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)}/>
+            <InputText placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)} value={query}/>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%'}}>
                 <IconBox onClick={onClickFile}>
                     <div className='flex flex-col gap-2.5' >

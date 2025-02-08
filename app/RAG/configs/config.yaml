@@ -17,7 +17,7 @@ retrieval:
   top_k: 5
   model_name: "nlpai-lab/KoE5"
   rerank: True
-  reranker_model_name: "BAAI/bge-reranker"
+  reranker_model_name: "BAAI/bge-reranker-v2-m3"
   use_mmr: true  # MMR 사용 여부
   lambda_mult: 0.5  # MMR 다양성 가중치
   batch_size: 32  # 배치 처리 크기
@@ -35,7 +35,10 @@ query_embedding_model_name: "nlpai-lab/KoE5"
 llm_model_source: "openai"
 llm_model_name: "gpt-4o-mini"
 chat_template: |
-  주어진 문서를 바탕으로 질문에 답해주세요. 주어진 문서가 table일 경우 이를 해석해서 대답해주세요. 만약 주어진 문서에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요.
+  주어진 문서를 바탕으로 질문에 답해주세요. 
+  주어진 문서가 table일 경우 이를 해석해서 대답해주세요.  
+  여러 문서에서 정답이 나오는 경우 출처를 포함해 여러 출처에서 답을 찾아 출력해주세요.  
+  만약 주어진 문서에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요. 
   {docs}
 batch_size: 16
 g_eval: True

@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import json
 import os
@@ -13,9 +13,11 @@ import hydra
 import pandas as pd
 from core.config import settings
 from langchain.prompts import ChatPromptTemplate
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage
 from loguru import logger
-from omegaconf import DictConfig
-from prometheus_client import Counter, Histogram
+from omegaconf import DictConfig    
+from prometheus_client import Counter, Histogram        
 from RAG.generator import get_llm_api
 from schemas.rag import QueryRequest, RetrievalResult
 
@@ -42,6 +44,7 @@ class RAGService:
         self._init_retrievers()
         self._init_generator()
         self._init_cache()
+        self._init_chat_histories()
 
     def _load_config(self):
         """Hydra 설정 로드"""
@@ -83,78 +86,99 @@ class RAGService:
         """캐시 초기화"""
         self.query_cache = {}
 
+    def _init_chat_histories(self):
+        """채팅 기록 초기화"""
+        self.chat_histories: Dict[str, ChatMessageHistory] = {}
+
     @lru_cache(maxsize=1000)
-    def _get_cached_retrieval(self, query: str) -> List[RetrievalResult]:
+    def _get_cached_retrieval_with_query_rewritten(self, query: str) -> List[RetrievalResult]:
         """검색 결과 캐싱"""
-        return self.ensemble_retriever.get_relevant_documents(query=query, k=15)
+        return self.ensemble_retriever.get_relevant_documents_with_query_rewritten(query=query, k=15)
+
+    @lru_cache(maxsize=1000)
+    def _get_cached_retrieval_without_query_rewritten(self, query: str) -> List[RetrievalResult]:
+        """검색 결과 캐싱"""
+        return self.ensemble_retriever.get_relevant_documents_without_query_rewritten(query=query, k=15)
+
+
+    async def _retrieve_documents(self, query: str) -> Tuple[str, List[RetrievalResult]]:
+        """문서 검색 로직"""
+        retrieved_docs = self._get_cached_retrieval_with_query_rewritten(query)
+        docs_text = ""
+        retrieval_results = []
+
+        async def process_doc(doc):
+            retrieval_results.append(
+                RetrievalResult(
+                    content=doc.page_content,
+                    metadata=doc.metadata,
+                    score=float(doc.metadata.get("score", 1.0)),
+                    company=doc.metadata.get("company", "unknown"),
+                    source=f"{doc.metadata.get('company', 'unknown')}_{doc.metadata.get('securities', 'unknown')}_{doc.metadata.get('date', 'unknown')}_page{doc.metadata.get('page', 'unknown')}_{doc.metadata.get('category', 'unknown')}",
+                )
+            )
+
+            if doc.metadata.get("category") == "table":
+                try:
+                    doc_path = self._fix_path(doc.metadata.get("path"))
+                    doc_path = "../PDF_OCR" + doc_path
+                    table_path = doc_path.replace(".json", ".csv")
+
+                    if os.path.exists(table_path):
+                        async with aiofiles.open(table_path, mode="r") as f:
+                            content = await f.read()
+                            df = pd.read_csv(StringIO(content))
+                            return f"{doc.metadata.get('company')} 테이블 데이터 :\n {df.to_string(index=False)}\n"
+                except Exception as e:
+                    logger.error(f"Error processing table document: {str(e)}")
+                    return "테이블 데이터를 처리하는 중 오류가 발생했습니다."
+            return doc.page_content
+
+        from asyncio import gather
+        if len(retrieved_docs) > 15:
+            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:15]])
+        else:
+            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs])
+        docs_text = "\n".join(processed_contents)
+
+        return docs_text, retrieval_results
+
+    async def _generate_response(self, query: str, docs_text: str, llm_model: Optional[str] = None) -> str:
+        """LLM 응답 생성 로직"""
+        if llm_model == "GPT-4o" or llm_model == "GPT-4o-mini" or llm_model == None:
+            self.cfg.llm_model_name = "gpt-4o-mini"
+            self.cfg.llm_model_source = "openai"
+            llm = get_llm_api(self.cfg)
+        elif llm_model == "CLOVA X":
+            self.cfg.llm_model_source = "naver"
+            llm = get_llm_api(self.cfg)
+        else:
+            raise ValueError(f"Invalid LLM model: {llm_model}")
+
+        prompt_template = ChatPromptTemplate.from_messages(
+            [("system", self.cfg.chat_template), ("user", f"질문: {query}")]
+        )
+        prompt = prompt_template.invoke({"docs": docs_text})
+        answer = llm.invoke(prompt)
+        return answer.content
 
     async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
+        """일반 쿼리 처리"""
         QUERY_COUNTER.inc()
         start_time = time.time()
 
         try:
             with RETRIEVAL_LATENCY.time():
-                retrieved_docs = self._get_cached_retrieval(request.query)
+                docs_text, retrieval_results = await self._retrieve_documents(request.query)
 
-            docs_text = ""
-            retrieval_results = []
-
-            async def process_doc(doc):
-                retrieval_results.append(
-                    RetrievalResult(
-                        content=doc.page_content,
-                        metadata=doc.metadata,
-                        score=float(doc.metadata.get("score", 1.0)),
-                        company=doc.metadata.get("company", "unknown"),
-                        source=f"{doc.metadata.get('company', 'unknown')}_{doc.metadata.get('securities', 'unknown')}_{doc.metadata.get('date', 'unknown')}_page{doc.metadata.get('page', 'unknown')}_{doc.metadata.get('category', 'unknown')}",
-                    )
-                )
-
-                if doc.metadata.get("category") == "table":
-                    try:
-                        doc_path = self._fix_path(doc.metadata.get("path"))
-                        doc_path = "../PDF_OCR" + doc_path
-                        table_path = doc_path.replace(".json", ".csv")
-
-                        if os.path.exists(table_path):
-                            async with aiofiles.open(table_path, mode="r") as f:
-                                content = await f.read()
-                                df = pd.read_csv(StringIO(content))
-                                return f"테이블 데이터 :\n {df.to_string(index=False)}\n"
-                    except Exception as e:
-                        logger.error(f"Error processing table document: {str(e)}")
-                        return "테이블 데이터를 처리하는 중 오류가 발생했습니다."
-                return doc.page_content
-
-            # 병렬로 문서 처리
-            from asyncio import gather
-
-            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:10]])
-            docs_text = "\n".join(processed_contents)
-
-            if not retrieval_results:  # retrieval_results가 비어있는 경우 처리
+            if not retrieval_results:
                 logger.warning("No retrieval results found")
                 company = "unknown"
             else:
                 company = retrieval_results[0].company
 
-            # ClovaX 모델 초기화 및 답변 생성
-            llm = get_llm_api(self.cfg)
-
-            # 프롬프트 템플릿 생성
-            prompt_template = ChatPromptTemplate.from_messages(
-                [("system", self.cfg.chat_template), ("user", f"질문: {request.query}\n 참고 문서: {docs_text}")]
-            )
-
-            # 프롬프트 생성
-            prompt = prompt_template.invoke({"docs": docs_text})
-
-            # 답변 생성
-            answer = llm.invoke(prompt)
-
-            answer_text = answer.content
-
-            logger.info(f"Successfully generated answer using {self.cfg.llm_model_name}")
+            answer_text = await self._generate_response(request.query, docs_text, request.llm_model)
+            
             processing_time = time.time() - start_time
             logger.info(f"Query processed in {processing_time:.2f} seconds")
 
@@ -167,11 +191,91 @@ class RAGService:
             processing_time = time.time() - start_time
             QUERY_LATENCY.observe(processing_time)
 
-        return answer_text, retrieval_results, processing_time, company
+    async def process_chat(self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:
+        """채팅 처리"""
+        # 세션 기록 초기화 또는 가져오기
+        if session_id not in self.chat_histories:
+            self.chat_histories[session_id] = ChatMessageHistory()
+            # 이전 대화 기록이 있다면 복원
+            if chat_history:
+                for msg in chat_history:
+                    if isinstance(msg, dict):
+                        role = msg.get("role")
+                        content = msg.get("content")
+                    else:
+                        role = msg.role
+                        content = msg.content
+                        
+                    if role == "user":
+                        self.chat_histories[session_id].add_user_message(content)
+                    elif role == "assistant":
+                        self.chat_histories[session_id].add_ai_message(content)
+
+        chat_history = self.chat_histories[session_id]
+        
+        # 새 메시지 추가
+        chat_history.add_user_message(query)
+
+        try:
+            # 문서 검색
+            docs_text, retrieval_results = await self._retrieve_documents(query)
+            
+            if not retrieval_results:
+                company = "unknown"
+            else:
+                company = retrieval_results[0].company
+
+            # 채팅 컨텍스트를 포함한 프롬프트 생성
+            chat_context = "\n".join([
+                f"{'User' if isinstance(msg, HumanMessage) else 'Assistant'}: {msg.content}"
+                for msg in chat_history.messages[-4:]  # 최근 4개 메시지만 사용
+            ])
+            
+            # 응답 생성
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", self.cfg.chat_template),
+                ("system", "이전 대화 기록:\n{chat_context}"),
+                ("user", f"질문: {query}")
+            ])
+            
+            if llm_model == "GPT-4o" or llm_model == "GPT-4o-mini":
+                self.cfg.llm_model_name = "gpt-4o-mini"
+                self.cfg.llm_model_source = "openai"
+                llm = get_llm_api(self.cfg)
+            elif llm_model == "CLOVA X":
+                self.cfg.llm_model_source = "naver"
+                llm = get_llm_api(self.cfg)
+            else:
+                raise ValueError(f"Invalid LLM model: {llm_model}")
+
+            prompt = prompt_template.invoke({
+                "docs": docs_text,
+                "chat_context": chat_context
+            })
+            
+            answer = llm.invoke(prompt)
+            answer_text = answer.content
+            
+            # 응답 저장
+            chat_history.add_ai_message(answer_text)
+            
+            # 현재 대화 기록을 ChatMessage 형식으로 변환
+            current_chat_history = [
+                {"role": "user" if isinstance(msg, HumanMessage) else "assistant", 
+                 "content": msg.content}
+                for msg in chat_history.messages
+            ]
+            
+            processing_time = time.time()
+            
+            return answer_text, retrieval_results, processing_time, company, current_chat_history
+
+        except Exception as e:
+            logger.error(f"Error processing chat: {str(e)}", exc_info=True)
+            raise
 
     def _fix_path(self, path: str) -> str:
         path = path.replace("page_page_", "page_")
         if path.endswith(".json.json"):
             path = path[:-5]
-
         return path

@@ -56,7 +56,7 @@ export default function MainPage() {
       </SideBar>
       
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
-        <CustomText weight='bold' size='xl' my='15' mx='20'>주식을 검색해 드릴까요?</CustomText>
+        <CustomText weight='bold' size='xl' my='15' mx='20'>원하는 금융정보를 검색해보세요</CustomText>
         <QueryInput height='130' model={model} mode='main' onFileUpload={handleUpload} uploadMessage={message} />
         <SelectModel onModelChange={handleChange} selectedValue={model} />
         <Box sx={{ display: 'flex', height: '40px', margin: '-45px 0 0 0', alignItems: 'center' }}>

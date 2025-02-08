@@ -61,7 +61,7 @@ export default function StockWidget( { company }) {
     <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', alignItems: 'center' }}>
       {stockData ? (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='50px'>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='100px'>
             <CustomText weight='bold' my='-8'>{stockData.itmsNm}</CustomText>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
               <CustomText size='xxs' color='second' mx='4'>{stockData.srtnCd}</CustomText>
@@ -86,7 +86,7 @@ export default function StockWidget( { company }) {
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='50px'>
+          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='100px'>
             <CustomText size='xs'>Loading ..</CustomText>
           </CustomContainer>
           <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='20px'>

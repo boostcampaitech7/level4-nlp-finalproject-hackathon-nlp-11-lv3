@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 import { styled, Box } from '@mui/system'
 import CustomContainer from '../atom/CustomContainer'
@@ -8,7 +7,8 @@ import InputText from '../atom/InputText'
 
 import FileIcon from '../../assets/icon/addFile.png'
 import SearchIcon from '../../assets/icon/search.png'
-import { requestQuery, uploadFile } from '../../api/query';
+
+import { uploadFile } from '../../api/query';
 
 const IconBox = styled(Box) (
     () => `
@@ -23,17 +23,12 @@ const IconBox = styled(Box) (
     `
 )
 
-export default function QueryInput({ height }) {
-    const [query, setQuery] = useState('');
-    const [answer, setAnswer] = useState();
-    const [company, setCompany] = useState();
-    const [file, setFile] = useState();
-    
+export default function QueryInput({ height, model }) {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
-    const max_tokens = 1000;
-    const temperature = 0.7;
+    const [file, setFile] = useState();
+    const [query, setQuery] = useState('');
 
     function onKeyUp(e) {
         if (e.key == 'Enter' && query) {
@@ -42,34 +37,9 @@ export default function QueryInput({ height }) {
     }
 
     function onClickSearch() {
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            uploadFile(
-                formData,
-                uploadFileSuccess,
-                uploadFileFail
-            );
+        if (query) {
+            navigate('/chat', { state: { query, model } });
         }
-
-        requestQuery(
-            query,
-            max_tokens,
-            temperature,
-            requestQuerySuccess,
-            requestQueryFail
-        ); 
-    }
-
-    function requestQuerySuccess(res) {
-        setAnswer(res.data.answer);
-        if (res.data.company == '네이버') setCompany('NAVER');
-        else setCompany(res.data.company);
-    }
-
-    function requestQueryFail(res) {
-        console.log(res);
     }
 
     function onClickFile() {
@@ -88,17 +58,25 @@ export default function QueryInput({ height }) {
 
     function uploadFileFail(res) {
         console.log('file upload fail');        
-    }
+    }    
 
     useEffect(() => {
-        if (answer && company) {
-            navigate('/chat', { state: { query, answer, company } });
-        }        
-    }, [answer, company, file]);
-    
+        if (file) {
+        console.log(file);
+        
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadFile(
+                formData,
+                uploadFileSuccess,
+                uploadFileFail
+            );
+        }
+    }, [file])
 
     return (
-        <CustomContainer color='212222' radius='25' width='85' height={height} padding='20'>
+        <CustomContainer color='212222' radius='25' width='80%' height={height} padding='20'>
             <InputText placeholder='질문을 입력하세요.' autoFocus onKeyUp={onKeyUp} onChange={(e) => setQuery(e.target.value)}/>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%'}}>
                 <IconBox onClick={onClickFile}>

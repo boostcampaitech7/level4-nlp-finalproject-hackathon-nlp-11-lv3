@@ -1,9 +1,19 @@
 import api from './api'
 
-function requestQuery(query, max_tokens, temperature, requestQuerySuccess, requestQueryFail) {
+function requestCompany(query, requestCompanySuccess, requestCompanyFail) {
+    api
+        .post('v1/company/', {
+            query: query,
+        })
+        .then(requestCompanySuccess)
+        .catch(requestCompanyFail);
+}
+
+function requestQuery(query, model, max_tokens, temperature, requestQuerySuccess, requestQueryFail) {
     api
         .post('v1/query/', {
             query: query,
+            llm_model: model,
             max_tokens: max_tokens,
             temperature: temperature,
         })
@@ -13,14 +23,15 @@ function requestQuery(query, max_tokens, temperature, requestQuerySuccess, reque
 
 function uploadFile(file, uploadFileSuccess, uploadFileFail) {
     api
-        .post('v1/documents/upload/', {
-            headers: {
-                'Content-Type': 'multipart/form-data',
+        .post('v1/documents/upload', 
+            file, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             },
-            file: file
-        })
+        )
         .then(uploadFileSuccess)
         .catch(uploadFileFail)
 }
 
-export { requestQuery, uploadFile };
+export { requestCompany, requestQuery, uploadFile };

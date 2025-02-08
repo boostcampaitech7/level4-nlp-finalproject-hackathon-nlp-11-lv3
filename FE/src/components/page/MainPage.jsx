@@ -32,7 +32,7 @@ export default function MainPage() {
       
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
         <CustomText weight='bold' size='xl' my='15' mx='20'>주식을 검색해 드릴까요?</CustomText>
-        <QueryInput height='130'/>
+        <QueryInput height='130' model={model? model : ''}/>
         <SelectModel onModelChange={handleChange} selectedValue={model} />
       </Box>
     </Box>

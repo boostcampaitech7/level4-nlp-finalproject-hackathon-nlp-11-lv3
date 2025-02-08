@@ -1,14 +1,5 @@
 import api from './api'
 
-function requestCompany(query, requestCompanySuccess, requestCompanyFail) {
-    api
-        .post('v1/company/', {
-            query: query,
-        })
-        .then(requestCompanySuccess)
-        .catch(requestCompanyFail);
-}
-
 function requestQuery(query, model, max_tokens, temperature, requestQuerySuccess, requestQueryFail) {
     api
         .post('v1/query/', {
@@ -34,4 +25,4 @@ function uploadFile(file, uploadFileSuccess, uploadFileFail) {
         .catch(uploadFileFail)
 }
 
-export { requestCompany, requestQuery, uploadFile };
+export { requestQuery, uploadFile };

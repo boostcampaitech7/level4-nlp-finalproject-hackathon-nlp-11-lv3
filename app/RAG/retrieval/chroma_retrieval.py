@@ -10,7 +10,11 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Chroma
 from retrieval.base import BaseRetriever
 from utils.query_rewriter import QueryRewriter
-
+from loguru import logger
+import time
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
 class ChromaRetrieval(BaseRetriever):
     def __init__(self, cfg):
@@ -26,6 +30,8 @@ class ChromaRetrieval(BaseRetriever):
         self.use_mmr = cfg.retrieval.get("use_mmr", True)  # MMR 사용 여부
         self.lambda_mult = cfg.retrieval.get("lambda_mult", 0.5)  # MMR 다양성 가중치
         self.executor = ThreadPoolExecutor(max_workers=4)  # 병렬 처리를 위한 스레드 풀
+        self.reranker = HuggingFaceCrossEncoder(model_name=cfg.retrieval.reranker_model_name) 
+        self.compressor = CrossEncoderReranker(model=self.reranker, top_n=15)
 
     @lru_cache(maxsize=1000)
     def _get_db(self, company: Optional[str] = None) -> Chroma:
@@ -37,82 +43,135 @@ class ChromaRetrieval(BaseRetriever):
 
         return self.db_cache[db_path]
 
-    def _search_with_mmr(self, db: Chroma, query: str, k: int) -> List[Document]:
+    def _search_with_mmr(self, db: Chroma, query: str, k: int, company: str) -> List[Document]:
         """MMR을 사용한 다양성 있는 검색 수행"""
-        return db.max_marginal_relevance_search(
-            query, k=k, fetch_k=2 * k, lambda_mult=self.lambda_mult  # 후보 문서 수 증가
-        )
+        if company and company.lower() != "none":
+            return db.max_marginal_relevance_search(query, k=k, filter={"company": company})
+        else:
+            return db.max_marginal_relevance_search(query, k=k)
+        
 
-    def _search_with_similarity(self, db: Chroma, query: str, k: int) -> List[Document]:
-        """기본 유사도 검색 수행"""
+    def _search_with_similarity(self, db: Chroma, query: str, k: int, company: str) -> List[Document]:
+        """
+        기본 유사도 검색 수행
+        company가 none이면 전체 데이터베이스에서 검색
+        """
+        logger.info(f"Performing similarity search with query: {query}, company: {company}")
+        if company and company.lower() != "none":
+            logger.info(f"Applying company filter: {company}")
+            return db.similarity_search(query, k=k, filter={"company": company})
+        logger.info("No company filter applied, searching entire database")
         return db.similarity_search(query, k=k)
 
-    def get_relevant_documents(self, query: str, k: int = None) -> List[Document]:
+
+    def get_relevant_documents_without_query_rewritten(self, query: str, k: int = None) -> List[Document]:
+        start_time = time.time()
+        all_docs = []
+        query_text, company = self.query_rewriter.extract_company(query)
+        if not isinstance(query_text, list):
+            query_text = [query_text]
+            
+        db = self._get_db("All_data")
+        retriever = db.as_retriever()
+        
+        compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
+
+        def search_for_query(q, company):
+            if company:
+                return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
+            else:
+                return compression_retriever.get_relevant_documents(q, k=k)
+        
+        futures = [self.executor.submit(search_for_query, q, company) for q in query_text]
+        for future in futures:
+            all_docs.extend(future.result())
+        logger.info(f"Retrieval processed without query rewritten in {time.time() - start_time:.2f} seconds")
+        return all_docs
+    
+    def get_relevant_documents_with_query_rewritten(self, query: str, k: int = None) -> List[Document]:
         if k is None:
             k = self.k
-        # 각 쿼리에 대해 검색 수행
+        
         all_docs = []
-        # search_func = self._search_with_mmr if self.use_mmr else self._search_with_similarity
-        search_func = self._search_with_similarity
+ 
+        # 쿼리 리라이터를 통해 쿼리 수정
         rewritten_query = self.query_rewriter.rewrite_query(query)
-        # 쿼리 분해
-        """
-        원본 쿼리: kakaobank 주가 예측
-        수정된 쿼리: 1. 카카오뱅크 주가 예측, 2. 네이버 주가 예측
-        """
-        clean_query = rewritten_query.replace("수정된 쿼리: ", "")
-        queries = []
-        for q in clean_query.split("."):
-            # 숫자와 공백 제거
-            q = q.strip()
-            if q.isdigit():
-                continue
-            queries.append(q[:-1])
-
-        print("---------rewritten_query---------")
-        print(queries)
-        print("---------rewritten_query---------")
+        print(rewritten_query)
+        # OUTPUT: 부분 추출
+        clean_query = rewritten_query.split("OUTPUT:")[-1].strip()
+        start_time = time.time()
+        # None인 경우 처리 우선전체에서 검색.
+        if clean_query == "None":
+            retrieval_time = time.time() - start_time
+            ret = self._search_with_similarity(self._get_db("All_data"), query, k, None)
+            logger.info(f"Retrieval processed in {retrieval_time:.2f} seconds")
+            return ret
+        
+        # 여러 회사에 대한 쿼리인 경우 파이프(|)로 분리
+        queries = clean_query.split("|")
+        logger.info(f"Parsed queries: {queries}")
+        
         if len(queries) == 1:
-            # 쿼리에서 회사명 추출 및 쿼리 확장
-            rewritten_queries, company = self.query_rewriter.extract_company(queries[0])
-            if not isinstance(rewritten_queries, list):
-                rewritten_queries = [rewritten_queries]
+            # 단일 쿼리 처리
+            if queries[0].strip() == "None":
+                retrieval_time = time.time() - start_time
+                ret = self._search_with_similarity(self._get_db("All_data"), query, k, None)
+                logger.info(f"Retrieval processed in {retrieval_time:.2f} seconds")
+                return ret
+            
+            query_text, company = self.query_rewriter.extract_company(queries[0])
+            if not isinstance(query_text, list):
+                query_text = [query_text]
+                
+            db = self._get_db("All_data")
+            retriever = db.as_retriever()
+            
+            compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
 
-            # 회사별 DB 또는 전체 DB에서 검색
-            db = self._get_db(company)
-
-            def search_for_query(q):
-                return search_func(db, q, k=(k // len(rewritten_queries)))
-
-            # ThreadPoolExecutor를 사용하여 병렬 검색
-            futures = [self.executor.submit(search_for_query, q) for q in rewritten_queries]
+            
+            def search_for_query(q, company):
+                if company:
+                    return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
+                else:
+                    return compression_retriever.get_relevant_documents(q, k=k)
+            
+            futures = [self.executor.submit(search_for_query, q, company) for q in query_text]
             for future in futures:
                 all_docs.extend(future.result())
         else:
-            # 여러 회사에 대한 쿼리 처리
-            processed_queries = []
-            companies = []
+            # 여러 쿼리 처리
+            db = self._get_db("All_data")
+            retriever = db.as_retriever()
+            compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
 
-            for query in queries:  # original queries 사용
-                query_text, company = self.query_rewriter.extract_company(query)
+            def search_for_query(q, company):
+                if company:
+                    return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
+                else:
+                    return compression_retriever.get_relevant_documents(q, k=k)
+            
+            
+
+            for query_part in queries:
+                if query_part.strip() == "None":
+                    continue
+                    
+                query_text, company = self.query_rewriter.extract_company(query_part)
                 if not isinstance(query_text, list):
                     query_text = [query_text]
-                processed_queries.extend(query_text)
-                companies.extend([company] * len(query_text))
-
-            print("Companies:", companies)
-            print("Processed queries:", processed_queries)
-
-            # 회사별 DB 가져오기
-            dbs = [self._get_db(company) for company in companies]
-
-            def search_for_query(q, db):
-                return self._search_with_mmr(db, q, k=k // len(processed_queries))
-
-            # 각 쿼리-DB 쌍에 대해 검색 실행
-            futures = [self.executor.submit(search_for_query, q, db) for q, db in zip(queries, dbs)]
-
-            for future in futures:
+                
+                k_per_query = max(1, k // len(queries))
+                future = self.executor.submit(search_for_query, query_text[0],k_per_query, company)
+                #future = self.executor.submit(search_func, db, query_text[0], k_per_query, company)
                 all_docs.extend(future.result())
-
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Retrieval processed in {processing_time:.2f} seconds")
         return all_docs
+
+    def get_relevant_documents(self, query: str, k: int = None) -> List[Document]:
+        """
+        BaseRetriever의 추상 메서드 구현
+        기본적으로 query rewritten을 사용하여 문서를 검색
+        """
+        return self.get_relevant_documents_with_query_rewritten(query, k)

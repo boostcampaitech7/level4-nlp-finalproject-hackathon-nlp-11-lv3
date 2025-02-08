@@ -1,24 +1,17 @@
 from typing import Dict, List, Union
 
 import json
+import os
 from pathlib import Path
+from bs4 import BeautifulSoup
 
 import pandas as pd
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def json_to_table(json_data: Union[str, Dict]) -> pd.DataFrame:
-    """
-    OCR JSON 결과에서 테이블 데이터를 추출하여 DataFrame으로 변환합니다.
 
-    Args:
-        json_data (Union[str, Dict]): JSON 파일 경로 또는 JSON 데이터 딕셔너리
-
-    Returns:
-        pd.DataFrame: 변환된 테이블 데이터
-
-    Raises:
-        ValueError: 테이블 데이터를 찾을 수 없거나 변환 중 오류가 발생한 경우
-    """
     # JSON 데이터 로드
     if isinstance(json_data, str):
         with open(json_data, "r", encoding="utf-8") as f:
@@ -27,32 +20,26 @@ def json_to_table(json_data: Union[str, Dict]) -> pd.DataFrame:
         data = json_data
 
     try:
-        # 테이블 데이터 추출
-        tables = data["images"][0]["tables"]
-        table_rows = []
+        html = data["content"]["html"]
 
-        for cell in tables[0]["cells"]:
-            row_index = cell["rowIndex"]
-            col_index = cell["columnIndex"]
-            text = " ".join([line["cellWords"][0]["inferText"] for line in cell["cellTextLines"]])
-            table_rows.append((row_index, col_index, text))
+        # beautifulsoup로 html 파싱
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # html에서 테이블 추출
+        df = pd.read_html(str(soup))[0]
 
-        # DataFrame 생성 및 피벗
-        df = pd.DataFrame(table_rows, columns=["row", "col", "text"])
-        pivot_table = df.pivot(index="row", columns="col", values="text")
-
-        return pivot_table
+        #csv 저장
+        return df
+        #print(f"처리 완료: {output_base} : {file}")
+        
 
     except Exception as e:
-        raise ValueError(f"테이블 데이터 변환 중 오류 발생: {str(e)}")
-
+        print(f"테이블 데이터 변환 중 오류 발생: {str(e)}")
 
 def convert_json_to_csv(
     input_path: Union[str, Path], output_path: Union[str, Path] = None, recursive: bool = False
 ) -> None:
     """
-    지정된 경로의 JSON 파일(들)을 CSV 파일로 변환합니다.
-
     Args:
         input_path (Union[str, Path]): JSON 파일 또는 디렉토리 경로
         output_path (Union[str, Path], optional): 출력 경로.
@@ -101,10 +88,10 @@ def convert_json_to_csv(
         process_file(json_file)
 
 
+                
+        
+
+def main():
+    convert_json_to_csv("../../PDF_OCR/new_data/All_data/table.json")
 if __name__ == "__main__":
-
-    # 1. 단일 JSON 파일을 CSV로 변환
-    # convert_json_to_csv("path/to/table_result.json")
-
-    # 2. 디렉토리 내 모든 JSON 파일을 CSV로 변환
-    convert_json_to_csv("path/to/json/directory", "path/to/output/directory", recursive=True)
+    main() 

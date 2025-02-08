@@ -24,7 +24,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ### 2.2 API 서버 모드
 ```bash
 cd app
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+gunicorn main:app -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:30685
 ```
 
 ## 3. API 엔드포인트
@@ -83,16 +83,17 @@ curl -u test@email.com:1234 \
 ```python
 import requests
 
-url = "http://localhost:8000/api/v1/query"
+url = "http://localhost:8000/api/v1/query/"
+auth = ("test@email.com", "1234")
 data = {
     "query": "질문 내용",
     "max_tokens": 1000,
     "temperature": 0.7
 }
 
-response = requests.post(url, json=data)
+response = requests.post(url, json=data, auth=auth)
 result = response.json()
-print(result["answer"])
+
 ```
 
 ## 4. 모니터링

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { styled, Box } from '@mui/system'
 import CustomContainer from '../atom/CustomContainer'
+import IconBox from '../atom/IconBox';
 import InputText from '../atom/InputText'
 
 import FileIcon from '../../assets/icon/addFile.png'
@@ -10,20 +11,7 @@ import SearchIcon from '../../assets/icon/search.png'
 
 import { uploadFile } from '../../api/query';
 
-const IconBox = styled(Box) (
-    () => `
-    width: 30px;
-    display: flex;
-    alignItems: center;
-    margin: 20px 5px;
-    cursor: pointer;
-    &:hover {
-        opacity: 0.8;
-    }
-    `
-)
-
-export default function QueryInput({ height, model, mode, onQuerySubmit }) {
+export default function QueryInput({ height, model, mode, onQuerySubmit, onFileUpload, uploadMessage }) {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
@@ -56,13 +44,15 @@ export default function QueryInput({ height, model, mode, onQuerySubmit }) {
 
     function handleFileChange(e) {
         setFile(e.target.files[0]);
+        onFileUpload('PDF 받아라 ~');        
     }
 
-    function uploadFileSuccess(res) {       
+    function uploadFileSuccess(res) {      
+        onFileUpload('벡터 DB 생성 완료 !');
     }
 
     function uploadFileFail(res) {
-        console.log('file upload fail');        
+        onFileUpload('실패 !');
     }    
 
     useEffect(() => {

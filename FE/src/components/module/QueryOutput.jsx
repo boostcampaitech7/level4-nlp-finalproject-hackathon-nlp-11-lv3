@@ -3,23 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { styled, Box } from '@mui/system'
 import CustomContainer from '../atom/CustomContainer';
 import CustomText from '../atom/CustomText';
+import IconBox from '../atom/IconBox';
 
 import CopyIcon from '../../assets/icon/copy.png'
 import ReloadIcon from '../../assets/icon/reload.png'
 import LoadingIcon from '../../assets/icon/spinner.gif'
-
-const IconBox = styled(Box) (
-    () => `
-    width: 30px;
-    display: flex;
-    alignItems: center;
-    margin: 0px 5px 20px 5px;
-    cursor: pointer;
-    &:hover {
-        opacity: 0.8;
-    }
-    `
-)
 
 export default function QueryOutput({ children, answer }) {    
     const [displayedText, setDisplayedText] = useState('');

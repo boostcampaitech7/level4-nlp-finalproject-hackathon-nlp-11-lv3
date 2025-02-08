@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { styled, Box } from '@mui/system';
 import SideBar from '../atom/SideBar';
+import IconBox from '../atom/IconBox';
 
 import StockWidget from '../module/StockWidget';
 import QueryInput from '../module/QueryInput';
@@ -11,19 +12,6 @@ import QueryOutput from '../module/QueryOutput';
 import HomeIcon from '../../assets/icon/home.png';
 
 import { requestQuery } from '../../api/query';
-
-const IconBox = styled(Box) (
-    () => `
-    width: 30px;
-    display: flex;
-    alignItems: center;
-    margin: 20px 5px;
-    cursor: pointer;
-    &:hover {
-        opacity: 0.8;
-    }
-    `
-)
 
 export default function ChatPage() {
   const navigate = useNavigate();

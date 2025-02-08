@@ -48,7 +48,7 @@ class VectorStore:
             }
 
             # Document 객체 생성
-            doc = Document(page_content="<" + item["company"] + ">" + item["description"], metadata=metadata)
+            doc = Document(page_content="<" + item["company"] + ">" + item["description"] + "< 출처 : " + item["securities"] + "_" + item["page"] + ">" , metadata=metadata)
             documents.append(doc)
         return documents
 
@@ -89,17 +89,38 @@ class VectorStore:
 
             vectorstore.persist()
             print(f"{company} 벡터 DB 업데이트 완료: {len(documents)}개 문서 추가")
+    
+    def update_user_vector_stores(self, user_json_path: str,user_name: str):
+        """
+        유저별로 벡터 DB를 업데이트합니다.
+        """
+
+        text_data = self.load_json_data(os.path.join(user_json_path,"text.json")) 
+        table_data = self.load_json_data(os.path.join(user_json_path,"table.json")) 
+        user_data = text_data + table_data
+        
+        documents = self.create_documents(user_data)
+        user_persist_dir = os.path.join(self.persist_directory, user_name)
+        if os.path.exists(user_persist_dir):
+            vectorstore = Chroma(persist_directory=user_persist_dir, embedding_function=self.embeddings)
+            vectorstore.add_documents(documents)
+        else:
+            vectorstore = Chroma.from_documents(documents=documents, embedding=self.embeddings, persist_directory=user_persist_dir)
+        
 
     def update_all_vector_stores(self, text_json_path: str, table_json_path: str):
         """
         모든 데이터를 통합하여 벡터 DB를 업데이트합니다.
         """
         # JSON 데이터 로드
-        text_data = self.load_json_data(text_json_path)
-        table_data = self.load_json_data(table_json_path)
+        if text_json_path == table_json_path:
+            all_data = self.load_json_data(text_json_path)
+        else:
+            text_data = self.load_json_data(text_json_path)
+            table_data = self.load_json_data(table_json_path)
 
         # 모든 데이터 통합
-        all_data = text_data + table_data
+            all_data = text_data + table_data
         documents = self.create_documents(all_data)
         # 모든 데이터를 통합한 벡터 DB 업데이트
         company_persist_dir = os.path.join(self.persist_directory, "All_data")
@@ -125,14 +146,14 @@ class VectorStore:
         return Chroma(persist_directory=company_persist_dir, embedding_function=self.embeddings)
 
     @staticmethod
-    def move_to_old_data(json_paths: List[str], old_data_dir: str = "old_data"):
+    def move_to_old_data(json_paths: List[str], old_data_dir: str = "old_data" ,user_name: str = "All_data"):
         """처리된 JSON 파일을 old_data 디렉토리로 이동합니다."""
-        if not os.path.exists(old_data_dir):
-            os.makedirs(old_data_dir)
+        if not os.path.exists(os.path.join(old_data_dir,user_name)):
+            os.makedirs(os.path.join(old_data_dir,user_name))
 
         for json_path in json_paths:
             if os.path.exists(json_path):
                 filename = os.path.basename(json_path)
-                target_path = os.path.join(old_data_dir, filename)
+                target_path = os.path.join(old_data_dir,user_name, filename)
                 shutil.move(json_path, target_path)
                 print(f"파일 이동 완료: {json_path} -> {target_path}")

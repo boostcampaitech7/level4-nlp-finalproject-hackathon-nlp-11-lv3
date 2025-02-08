@@ -45,3 +45,15 @@ def process_image_ocr(image_file, is_table=False):
         response = requests.request("POST", api_url, headers=headers, data=payload, files=files)
 
     return response.json()
+
+def upstage_ocr(image_file):
+    api_url = os.getenv('up_stage_url')
+    secret_key = os.getenv('up_stage_api_key')
+
+    with open(image_file, 'rb') as f:
+        files = {"document": open(image_file, 'rb')}
+        data = {"ocr":"force","base64_encoding":"['table']","model":"document-parse"}
+        headers = {'Authorization': f'Bearer {secret_key}'}
+        response = requests.request("POST", api_url, headers=headers, files=files, data=data)
+        
+    return response.json()

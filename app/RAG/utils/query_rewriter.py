@@ -19,26 +19,32 @@ from rapidfuzz import process
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import pipeline
+from loguru import logger
 
 """
-기본적으로 ClovaX 모델을 사용하여 쿼리를 수정합니다.
-
-
+기본적으로 gpt-4o-mini 모델을 사용하여 쿼리를 수정합니다.
 """
 query_rewriting_prompt = """
+당신은 쿼리를 재작성 해주는 전문가입니다.
 다음 쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성하거나 분리해 주세요.
 만약 쿼리에 리스트에 있는 회사명과 같은 회사명이 있으면 리스트의 이름으로 수정해주세요.
-{list}
+만약 없다면 None 을 반환해주세요.
+
+List: {list}
+
 예시)
-원본 쿼리: kakaobank 주가 예측
-수정된 쿼리: 카카오뱅크 주가 예측
+INPUT: kakaobank 주가 예측
+OUTPUT: 카카오뱅크 주가 예측
 
-원본 쿼리: 카카오뱅크와 네이버 주가 예측
-수정된 쿼리: 1. 카카오뱅크 주가 예측, 2. 네이버 주가 예측
+INPUT: 카카오뱅크와 네이버 주가 예측
+OUTPUT: 카카오뱅크 주가 예측|네이버 주가 예측
 
+INPUT: "없는회사명"과 네이버 주가 예측
+OUTPUT: None|네이버 주가 예측
 
-원본 쿼리: {query}
-수정된 쿼리:
+INPUT: "없는회사명"의 시가총액은?
+OUTPUT: None
+
 """
 
 project_root = Path(__file__).parent.parent
@@ -46,43 +52,22 @@ project_root = Path(__file__).parent.parent
 
 class QueryRewriter:
     def __init__(self):
-        self.company_names = [
-            "카카오뱅크",
-            "엘앤에프",
-            "롯데렌탈",
-            "CJ제일제당",
-            "LG화학",
-            "네이버",
-            "SK하이닉스",
-            "한화솔루션",
-            "SK케미칼",
-            "크래프톤",
-        ]
-
+        
+        self.company_names = os.listdir(project_root / "vector_db")
         self.parser = StrOutputParser()
         self._load_config()
-        self.model = get_llm_api(self.cfg)
+        self.model = get_llm_api(self.cfg, temperature=0.4)
 
     def _load_config(self):
         """Hydra 설정 로드"""
-        # 현재 작업 디렉토리를 저장
-        original_cwd = os.getcwd()
-
-        try:
-            os.chdir(str(project_root))
-
-            # 상대 경로로 config_path 설정
-            with hydra.initialize(version_base=None, config_path="../configs"):
-                cfg = hydra.compose(config_name="config")
-                self.cfg = cfg
-        finally:
-            # 원래 디렉토리로 복귀
-            os.chdir(original_cwd)
+        
+        # 상대 경로로 config_path 설정
+        with hydra.initialize(version_base=None, config_path="../configs"):
+            cfg = hydra.compose(config_name="config")
+            self.cfg = cfg
 
     def extract_company(self, query: str) -> Tuple[str, Optional[str]]:
         """
-        쿼리에서 회사명을 추출하고, 수정된 쿼리와 회사명을 반환합니다.
-
         Args:
             query: 원본 쿼리 문자열
 
@@ -112,7 +97,16 @@ class QueryRewriter:
         """
         쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성합니다.
         """
-        prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query", "list"])
+        start_time = time.time()
+        #prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query", "list"])
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", query_rewriting_prompt),
+                ("user", "{query}"),
+            ]
+        )
+
+
         chain = prompt | self.model | self.parser
         # 회사명 리스트를 문자열로 변환
         company_list_str = ", ".join(f'"{company}"' for company in self.company_names)
@@ -120,4 +114,6 @@ class QueryRewriter:
         # 딕셔너리로 입력값 전달
         result = chain.invoke({"query": query, "list": list_str})
         # 결과가 리스트인 경우 문자열로 변환
+        processing_time = time.time() - start_time
+        logger.info(f"Rewrite Query processed in {processing_time:.2f} seconds")
         return result

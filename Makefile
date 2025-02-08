@@ -31,3 +31,9 @@ clean-test:
 	rm -f .coverage.*
 	rm -rf .pytest_cache
 	rm -rf .mypy_cache
+
+clean-all: clean-pyc clean-test clean-build
+
+clean-build:
+	rm -rf build/
+	rm -rf dist/

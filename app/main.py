@@ -4,6 +4,11 @@ from core.logging import setup_logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.responses import FileResponse
+from starlette.staticfiles import StaticFiles
+import os
+
+
 
 app = FastAPI(
     title="RAG API Server",
@@ -24,6 +29,14 @@ app.add_middleware(
 
 # 메트릭스 설정
 Instrumentator().instrument(app).expose(app)
+
+
+dist_dir = "./dist"
+app.mount("/assets", StaticFiles(directory=os.path.join(dist_dir, "assets")), name="assets")
+
+@app.get("/")
+def serve_index():
+    return FileResponse(os.path.join(dist_dir, "index.html"))
 
 # 로깅 설정
 setup_logging()

@@ -1,3 +1,7 @@
+import os
+
+import uvicorn
+from api.v1.endpoints import documents
 from api.v1.router import router as api_v1_router
 from core.config import settings
 from core.logging import setup_logging
@@ -6,9 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.responses import FileResponse
 from starlette.staticfiles import StaticFiles
-import os
-
-
 
 app = FastAPI(
     title="RAG API Server",
@@ -34,9 +35,11 @@ Instrumentator().instrument(app).expose(app)
 dist_dir = "./dist"
 app.mount("/assets", StaticFiles(directory=os.path.join(dist_dir, "assets")), name="assets")
 
+
 @app.get("/")
 def serve_index():
     return FileResponse(os.path.join(dist_dir, "index.html"))
+
 
 # 로깅 설정
 setup_logging()
@@ -52,6 +55,13 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, workers=4)
+    # uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, workers=4)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        workers=1,
+        timeout_keep_alive=300,  # 연결 유지 타임아웃
+        timeout=600,  # 워커 타임아웃
+    )

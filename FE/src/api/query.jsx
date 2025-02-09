@@ -1,15 +1,18 @@
 import api from './api'
 
-function requestQuery(query, model, max_tokens, temperature, requestQuerySuccess, requestQueryFail) {
+function requestQuery(sessionId, query, company, model, max_tokens, temperature, chatHistory, requestQuerySuccess, requestQueryFail) {
     api
-        .post('v1/query/', {
+        .post('v1/chatting', {
+            session_id: sessionId,
             query: query,
-            llm_model: model,
+            // llm_model: model,
             max_tokens: max_tokens,
             temperature: temperature,
+            company: company,
+            chat_history: chatHistory
         })
         .then(requestQuerySuccess)
-        .catch(requestQueryFail);
+        .catch(requestQueryFail)
 }
 
 function uploadFile(file, uploadFileSuccess, uploadFileFail) {

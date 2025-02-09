@@ -1,9 +1,10 @@
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import json
 import os
 import sys
 import time
+import warnings
 from functools import lru_cache
 from io import StringIO
 from pathlib import Path
@@ -16,18 +17,19 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.messages import AIMessage, HumanMessage
 from loguru import logger
-from omegaconf import DictConfig    
-from prometheus_client import Counter, Histogram        
+from omegaconf import DictConfig
+from prometheus_client import Counter, Histogram
 from RAG.generator import get_llm_api
 from schemas.rag import QueryRequest, RetrievalResult
 
+warnings.filterwarnings("ignore")
 # RAG 모듈 import를 위한 경로 설정
 project_root = Path(__file__).parent.parent
 rag_path = project_root / "RAG"
 sys.path.append(str(rag_path))
 
 # RAG 모듈 import
-from RAG.retrieval import BM25Retrieval, ChromaRetrieval, DenseRetrieval, EnsembleRetrieval
+from RAG.retrieval import ChromaRetrieval
 
 # from RAG.source.generate import generate
 
@@ -100,7 +102,6 @@ class RAGService:
         """검색 결과 캐싱"""
         return self.ensemble_retriever.get_relevant_documents_without_query_rewritten(query=query, k=15)
 
-
     async def _retrieve_documents(self, query: str) -> Tuple[str, List[RetrievalResult]]:
         """문서 검색 로직"""
         retrieved_docs = self._get_cached_retrieval_with_query_rewritten(query)
@@ -121,7 +122,7 @@ class RAGService:
             if doc.metadata.get("category") == "table":
                 try:
                     doc_path = self._fix_path(doc.metadata.get("path"))
-                    doc_path = "../PDF_OCR" + doc_path
+                    doc_path = "../PDF_OCR/processed_ocr_results" + doc_path
                     table_path = doc_path.replace(".json", ".csv")
 
                     if os.path.exists(table_path):
@@ -135,6 +136,7 @@ class RAGService:
             return doc.page_content
 
         from asyncio import gather
+
         if len(retrieved_docs) > 15:
             processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:15]])
         else:
@@ -178,7 +180,7 @@ class RAGService:
                 company = retrieval_results[0].company
 
             answer_text = await self._generate_response(request.query, docs_text, request.llm_model)
-            
+
             processing_time = time.time() - start_time
             logger.info(f"Query processed in {processing_time:.2f} seconds")
 
@@ -191,7 +193,9 @@ class RAGService:
             processing_time = time.time() - start_time
             QUERY_LATENCY.observe(processing_time)
 
-    async def process_chat(self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:
+    async def process_chat(
+        self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None
+    ) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:
         """채팅 처리"""
         # 세션 기록 초기화 또는 가져오기
         if session_id not in self.chat_histories:
@@ -205,39 +209,43 @@ class RAGService:
                     else:
                         role = msg.role
                         content = msg.content
-                        
+
                     if role == "user":
                         self.chat_histories[session_id].add_user_message(content)
                     elif role == "assistant":
                         self.chat_histories[session_id].add_ai_message(content)
 
         chat_history = self.chat_histories[session_id]
-        
+
         # 새 메시지 추가
         chat_history.add_user_message(query)
 
         try:
             # 문서 검색
             docs_text, retrieval_results = await self._retrieve_documents(query)
-            
+
             if not retrieval_results:
                 company = "unknown"
             else:
                 company = retrieval_results[0].company
 
             # 채팅 컨텍스트를 포함한 프롬프트 생성
-            chat_context = "\n".join([
-                f"{'User' if isinstance(msg, HumanMessage) else 'Assistant'}: {msg.content}"
-                for msg in chat_history.messages[-4:]  # 최근 4개 메시지만 사용
-            ])
-            
+            chat_context = "\n".join(
+                [
+                    f"{'User' if isinstance(msg, HumanMessage) else 'Assistant'}: {msg.content}"
+                    for msg in chat_history.messages[-4:]  # 최근 4개 메시지만 사용
+                ]
+            )
+
             # 응답 생성
-            prompt_template = ChatPromptTemplate.from_messages([
-                ("system", self.cfg.chat_template),
-                ("system", "이전 대화 기록:\n{chat_context}"),
-                ("user", f"질문: {query}")
-            ])
-            
+            prompt_template = ChatPromptTemplate.from_messages(
+                [
+                    ("system", self.cfg.chatting_template),
+                    ("system", "이전 대화 기록:\n{chat_context}"),
+                    ("user", f"질문: {query}"),
+                ]
+            )
+
             if llm_model == "GPT-4o" or llm_model == "GPT-4o-mini":
                 self.cfg.llm_model_name = "gpt-4o-mini"
                 self.cfg.llm_model_source = "openai"
@@ -248,26 +256,22 @@ class RAGService:
             else:
                 raise ValueError(f"Invalid LLM model: {llm_model}")
 
-            prompt = prompt_template.invoke({
-                "docs": docs_text,
-                "chat_context": chat_context
-            })
-            
+            prompt = prompt_template.invoke({"docs": docs_text, "chat_context": chat_context})
+
             answer = llm.invoke(prompt)
             answer_text = answer.content
-            
+
             # 응답 저장
             chat_history.add_ai_message(answer_text)
-            
+
             # 현재 대화 기록을 ChatMessage 형식으로 변환
             current_chat_history = [
-                {"role": "user" if isinstance(msg, HumanMessage) else "assistant", 
-                 "content": msg.content}
+                {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
                 for msg in chat_history.messages
             ]
-            
+
             processing_time = time.time()
-            
+
             return answer_text, retrieval_results, processing_time, company, current_chat_history
 
         except Exception as e:

@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 import warnings
 
@@ -42,7 +43,7 @@ class MakeData:
 
     def load_existing_data(self):
         try:
-            with open("data.json", "r", encoding="utf-8") as f:
+            with open("new_data/All_data/table_data.json", "r", encoding="utf-8") as f:
                 return json.load(f)
         except FileNotFoundError:
             return []
@@ -102,7 +103,7 @@ class MakeData:
                 retry_count += 1
 
             # 최종 데이터 저장
-            with open("new_data/data.json", "w", encoding="utf-8") as f:
+            with open("new_data/All_data/table_data.json", "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
 
         except Exception as e:
@@ -122,51 +123,54 @@ class MakeData:
                 os.makedirs(company_output)
 
             # 증권사별 폴더 순회
-            for broker in os.listdir(company_path):
-                broker_path = os.path.join(company_path, broker)
-                if not os.path.isdir(broker_path):
+            # for broker in os.listdir(company_path):
+            #     broker_path = os.path.join(company_path, broker)
+            #     if not os.path.isdir(broker_path):
+            #         continue
+
+            #     # 증권사별 결과 폴더 생성
+            #     broker_output = os.path.join(company_output, broker)
+            #     if not os.path.exists(broker_output):
+            #         os.makedirs(broker_output)
+
+            # 페이지별 폴더 순회
+            for page in os.listdir(company_path):
+                page_path = os.path.join(company_path, page)
+                if not os.path.isdir(page_path):
                     continue
 
-                # 증권사별 결과 폴더 생성
-                broker_output = os.path.join(company_output, broker)
-                if not os.path.exists(broker_output):
-                    os.makedirs(broker_output)
+                # 페이지별 결과 폴더 생성 헷갈려죽겠네
+                page_output = os.path.join(company_output, page)
+                if not os.path.exists(page_output):
+                    os.makedirs(page_output)
 
-                # 페이지별 폴더 순회
-                for page in os.listdir(broker_path):
-                    page_path = os.path.join(broker_path, page)
-                    if not os.path.isdir(page_path):
+                # html 파일 처리
+
+                for file in os.listdir(page_path):
+                    if not file.lower().endswith((".json")):
                         continue
+                    if not "table" in file:
+                        continue
+                    print(f"table 처리 중: {file}")
+                    description = self.process_table_json_files(os.path.join(page_path, file))
+                    # broker_date = broker.split("_")[-1]
+                    # broker_name = broker_date.split("(")[0]
+                    # broker_date = broker_date.split("(")[1].replace(")", "")
+                    # data_category = file.split("_")[1]
+                    data.append(
+                        {
+                            "title": "",
+                            "description": description,
+                            "category": "table",
+                            "company": company,
+                            "securities": "All_data",
+                            "page": page,
+                            "date": "All_data",
+                            "path": f"./ocr_results/{company}/{page}/{file}",
+                        }
+                    )
 
-                    # 페이지별 결과 폴더 생성 헷갈려죽겠네
-                    page_output = os.path.join(broker_output, page)
-                    if not os.path.exists(page_output):
-                        os.makedirs(page_output)
-
-                    # html 파일 처리
-
-                    for file in os.listdir(page_path):
-                        if not file.lower().endswith((".json")):
-                            continue
-                        description = self.process_json_files(os.path.join(page_path, file))
-                        broker_date = broker.split("_")[-1]
-                        broker_name = broker_date.split("(")[0]
-                        broker_date = broker_date.split("(")[1].replace(")", "")
-                        data_category = file.split("_")[1]
-                        data.append(
-                            {
-                                "title": "",
-                                "description": description,
-                                "category": data_category,
-                                "company": company,
-                                "securities": broker_name,
-                                "page": page,
-                                "date": broker_date,
-                                "path": f"./ocr_results/{company}/{broker}/{page}/{file}",
-                            }
-                        )
-
-    def process_json_files(self, input_path):
+    def process_table_json_files(self, input_path):
 
         try:
             with open(input_path, "r", encoding="utf-8-sig") as f:
@@ -205,7 +209,7 @@ class MakeData:
                 "seed": 0,
             }
             # Query Per Minute 60회 이하로 고정
-            time.sleep(1.1)
+            time.sleep(2)
             response = requests.post(api_url, headers=headers, json=request_data)
             response_json = response.json()
             if response_json["status"]["code"] != "20000":
@@ -236,10 +240,121 @@ class MakeData:
             json.dump(self.failed_logs, ensure_ascii=False, indent=2)
 
 
+class TextDataPostprocess:
+    def __init__(self):
+        self.base_folder = "ocr_results"
+        self.output_folder = "ocr_results"
+        self.existing_data = self.load_existing_data()
+        self.failed_logs = self.load_failed_logs()
+
+        if not os.path.exists(self.output_folder):
+            os.makedirs(self.output_folder)
+
+    def load_existing_data(self):
+        try:
+            with open("new_data/All_data/text_data.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return []
+
+    def load_failed_logs(self):
+        try:
+            with open("fail_logs.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return []
+
+    def process_folders(self):
+        data = []
+        for company in os.listdir(self.base_folder):
+            company_path = os.path.join(self.base_folder, company)
+            if not os.path.isdir(company_path):
+                continue
+
+            # 회사별 결과 폴더 생성
+            company_output = os.path.join(self.output_folder, company)
+            if not os.path.exists(company_output):
+                os.makedirs(company_output)
+
+            # # 증권사별 폴더 순회
+            # for broker in os.listdir(company_path):
+            #     broker_path = os.path.join(company_path, broker)
+            #     if not os.path.isdir(broker_path):
+            #         continue
+
+            #     # 증권사별 결과 폴더 생성
+            #     broker_output = os.path.join(company_output, broker)
+            #     if not os.path.exists(broker_output):
+            #         os.makedirs(broker_output)
+
+            # 페이지별 폴더 순회
+            for page in os.listdir(company_path):
+                page_path = os.path.join(company_path, page)
+                if not os.path.isdir(page_path):
+                    continue
+
+                # 페이지별 결과 폴더 생성 헷갈려죽겠네
+            page_output = os.path.join(company_output, page)
+            if not os.path.exists(page_output):
+                os.makedirs(page_output)
+
+                # html 파일 처리
+
+                for file in os.listdir(page_path):
+                    if not file.lower().endswith((".json")):
+                        continue
+                    if not "text" in file:
+                        continue
+                    print(f"text 처리 중: {file}")
+                    description = self.process_text_json_files(os.path.join(page_path, file))
+                    # broker_date = broker.split("_")[-1]
+                    # broker_name = broker_date.split("(")[0]
+                    # broker_date = broker_date.split("(")[1].replace(")", "")
+                    # data_category = file.split("_")[1]
+                    data.append(
+                        {
+                            "title": "",
+                            "description": description,
+                            "category": "text",
+                            "company": company,
+                            "securities": "All_data",
+                            "page": page,
+                            "date": "All_data",
+                            "path": f"./ocr_results/{company}/{page}/{file}",
+                        }
+                    )
+        with open("new_data/All_data/text_data.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def process_text_json_files(self, input_path):
+        try:
+            with open(input_path, "r", encoding="utf-8") as f:
+                json_data = json.load(f)
+
+            # images 배열의 각 이미지에서 fields 배열을 순회하며 inferText 추출
+            all_text = []
+            for image in json_data.get("images", []):
+                for field in image.get("fields", []):
+                    if "inferText" in field:
+                        all_text.append(field["inferText"])
+
+            # 모든 텍스트를 공백으로 연결
+            return " ".join(all_text)
+
+        except Exception as e:
+            print(f"텍스트 처리 중 오류 발생: {e}")
+            self.save_failed_log(input_path, str(e))
+            return ""
+
+
 def main():
 
     processor = MakeData()
     processor.process_folders()
+
+    processor2 = TextDataPostprocess()
+    processor2.process_folders()
+    sys.exit()
 
 
 if __name__ == "__main__":

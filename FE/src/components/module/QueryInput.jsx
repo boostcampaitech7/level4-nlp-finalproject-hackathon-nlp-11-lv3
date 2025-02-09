@@ -76,11 +76,11 @@ export default function QueryInput({ height, model, mode, onQuerySubmit, onCompa
 
     function handleFileChange(e) {
         setFile(e.target.files[0]);
-        onFileUpload('PDF 받아라 ~');        
+        // onFileUpload('PDF 받아라 ~');        
     }
 
     function uploadFileSuccess(res) {      
-        onFileUpload('벡터 DB 생성 완료 !');
+        onFileUpload('PDF 전송 완료 !');
     }
 
     function uploadFileFail(res) {

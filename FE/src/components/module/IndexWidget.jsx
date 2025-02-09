@@ -5,6 +5,7 @@ import moment from 'moment'
 import { Box } from '@mui/system'
 import CustomText from '../atom/CustomText'
 import CustomContainer from '../atom/CustomContainer'
+import LoadingIcon from '../../assets/icon/spinner_widget.gif'
 
 const URL = 'https://apis.data.go.kr/1160100/service/GetMarketIndexInfoService/getStockMarketIndex';
 const apiKey = import.meta.env.VITE_INDEX_API_KEY;
@@ -54,7 +55,7 @@ export default function IndexWidget() {
   return (
     <Box sx={{ display: 'flex', cursor: 'pointer' }}>
       {indexData ? (
-        <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='170px'>
+        <CustomContainer color='303030' radius='8' width='190px' height='210' flexDirection='column' my='170px'>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
             <CustomText size='s' weight='bold' mx='5'>KOSPI</CustomText>
             <CustomText size='xxs' color='second' my='2' mx='4'>{`${indexData.basDt.slice(4, 6)}.${indexData.basDt.slice(6)}`}</CustomText>
@@ -66,8 +67,10 @@ export default function IndexWidget() {
           </Box>
         </CustomContainer>
       ) : (
-        <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='170px'>
-          <CustomText size='xs'>Loading...</CustomText>
+        <CustomContainer color='303030' radius='8' width='190px' height='210' my='170px'>
+          <Box sx={{ display: 'flex', alignItems: 'center'}}>
+            <img src={LoadingIcon} style={{ width: '40px', height: '40px' }} />
+          </Box>
         </CustomContainer>
       )}
     </Box>

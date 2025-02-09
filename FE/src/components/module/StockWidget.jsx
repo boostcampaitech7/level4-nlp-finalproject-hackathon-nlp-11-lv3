@@ -6,6 +6,7 @@ import { Box } from '@mui/system'
 import CustomText from '../atom/CustomText'
 import CustomContainer from '../atom/CustomContainer'
 import StockInfoBox from './StockInfoBox'
+import LoadingIcon from '../../assets/icon/spinner_widget.gif'
 
 const URL = 'https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo';
 const apiKey = import.meta.env.VITE_STOCK_API_KEY;
@@ -61,7 +62,7 @@ export default function StockWidget( { company }) {
     <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', alignItems: 'center' }}>
       {stockData ? (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='100px'>
+          <CustomContainer color='303030' radius='8' width='190px' height='210' flexDirection='column' my='100px'>
             <CustomText weight='bold' my='-8'>{stockData.itmsNm}</CustomText>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
               <CustomText size='xxs' color='second' mx='4'>{stockData.srtnCd}</CustomText>
@@ -74,7 +75,7 @@ export default function StockWidget( { company }) {
             </Box>
           </CustomContainer>       
 
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' justifyContent='flex-start' my='20px'>
+          <CustomContainer color='303030' radius='8' width='190px' height='210' flexDirection='column' justifyContent='flex-start' my='20px'>
             <CustomText size='s' weight='bold' my='10' textAlign='start'>시세정보</CustomText>
             <StockInfoBox text='시가' value={new Intl.NumberFormat().format(stockData.mkp)} color={stockData.yesterdayClpr < stockData.mkp ? 'up' : 'down'} />
             <StockInfoBox text='오늘 최고' value={new Intl.NumberFormat().format(stockData.hipr)} color={stockData.yesterdayClpr < stockData.hipr ? 'up' : 'down'} />
@@ -86,11 +87,15 @@ export default function StockWidget( { company }) {
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='100px'>
-            <CustomText size='xs'>Loading ..</CustomText>
+          <CustomContainer color='303030' radius='8' width='190px' height='210' my='100px'>
+            <Box sx={{ display: 'flex', alignItems: 'center'}}>
+              <img src={LoadingIcon} style={{ width: '40px', height: '40px' }} />
+            </Box>
           </CustomContainer>
-          <CustomContainer color='303032' radius='8' width='190px' height='210' flexDirection='column' my='20px'>
-            <CustomText size='xs'>Loading ..</CustomText>
+          <CustomContainer color='303030' radius='8' width='190px' height='210' my='20px'>
+            <Box sx={{ display: 'flex', alignItems: 'center'}}>
+              <img src={LoadingIcon} style={{ width: '40px', height: '40px' }} />
+            </Box>
           </CustomContainer>
         </Box>
       )}

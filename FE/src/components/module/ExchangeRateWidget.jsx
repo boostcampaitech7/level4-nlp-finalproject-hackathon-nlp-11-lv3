@@ -5,6 +5,7 @@ import moment from 'moment';
 import { Box } from '@mui/system';
 import CustomContainer from '../atom/CustomContainer';
 import ExchangeRateBox from './ExchangeRateBox';
+import LoadingIcon from '../../assets/icon/spinner_widget.gif'
 
 const LIVE_URL = 'https://api.currencylayer.com/live';
 const HISTORICAL_URL = 'https://api.currencylayer.com/historical';
@@ -55,7 +56,6 @@ export default function ExchangeRateWidget() {
         throw new Error(res.data.error.info);
       }
     } catch (err) {
-      console.error('Error fetching exchange rates:', err.message);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -67,24 +67,18 @@ export default function ExchangeRateWidget() {
     fetchRates(true); // 어제 환율
   }, []);
 
-  if (loading) {
+  if (error || loading) {
     return (
-      <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
-        <Box>Loading...</Box>
-      </CustomContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
-        <Box>Error: {error}</Box>
+      <CustomContainer color='303030' radius='8' width='190px' height='210' my='20px'>
+        <Box sx={{ display: 'flex', alignItems: 'center'}}>
+          <img src={LoadingIcon} style={{ width: '40px', height: '40px' }} />
+        </Box>
       </CustomContainer>
     );
   }
 
   return (
-    <CustomContainer color="303032" radius="8" flexDirection="column" width="190px" height="210" my="20px">
+    <CustomContainer color='303030' radius='8' flexDirection='column' width='190px' height='210' my='20px'>
       <Box sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', marginTop: '5px' }}>
         <ExchangeRateBox rate={rateData.USD?.toFixed(2)} yesterdayRate={yesterdayRateData.USD?.toFixed(2)}>USD</ExchangeRateBox>
         <ExchangeRateBox rate={rateData.JPY?.toFixed(2)} yesterdayRate={yesterdayRateData.JPY?.toFixed(2)}>JPY 100</ExchangeRateBox>

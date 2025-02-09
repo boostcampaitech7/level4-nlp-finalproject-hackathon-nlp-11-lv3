@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { styled, Box } from '@mui/system'
 import CustomText from '../atom/CustomText';
 import SideBar from '../atom/SideBar'
+import IconBox from '../atom/IconBox';
 
 import IndexWidget from '../module/IndexWidget';
 import ExchangeRateWidget from '../module/ExchangeRateWidget';
@@ -11,6 +12,7 @@ import QueryInput from '../module/QueryInput';
 import SelectModel from '../module/SelectModel';
 
 import LoadingIcon from '../../assets/icon/spinner_black.gif'
+import Frag from '../../assets/icon/frag.png'
 
 export default function MainPage() {
   const [model, setModel] = useState('');
@@ -33,7 +35,7 @@ export default function MainPage() {
       if (message === 'PDF 받아라 ~') {
         setVisibleIcon(LoadingIcon);
       } 
-      else if (message === '벡터 DB 생성 완료 !') {
+      else if (message === 'PDF 전송 완료 !') {
         setVisibleIcon('');
         const timer = setTimeout(() => {
           setVisibleMessage('');

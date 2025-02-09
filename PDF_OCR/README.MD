@@ -10,6 +10,7 @@ pip install -r requirements.txt
 ### 실행
 ``` bash
 python pdf_parser.py -i "./pdf/input_pdf_folder"  -r
+python data_postprocessor.py
 ```
 
 ---

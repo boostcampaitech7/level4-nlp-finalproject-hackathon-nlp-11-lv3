@@ -21,9 +21,12 @@ export default function ChatPage() {
   const query = location.state?.query;
   const model = location.state?.model || 'GPT-4o-mini';
 
+  const [sessionId, setSessionId] = useState('');
   const [queries, setQueries] = useState([query]);
   const [answers, setAnswers] = useState([]);
-  const [company, setCompany] = useState('');
+  const [company, setCompany] = useState(location.state?.company);
+  const [chatHistory, setChatHistory] = useState([]);  
+  
 
   const max_tokens = 1000;
   const temperature = 0.7;
@@ -37,15 +40,25 @@ export default function ChatPage() {
     requestApi(newQuery);
   }
 
+  function handleCompanySubmit(newCompany) {    
+    setCompany(newCompany);
+  }
+
   function requestApi(query) {
     requestQuery(
+        sessionId,
         query,
+        company === 'NAVER' ? '네이버' : company,
         model,
         max_tokens,
         temperature,
-        (res) => {            
-            setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
+        chatHistory,
+        (res) => {     
+            console.log(res);
+            setSessionId(res.data.session_id);
+            if (company === '') setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
             setAnswers((prev) => [...prev, res.data.answer]);
+            setChatHistory(res.data.chat_history);
         },
         (err) => console.log('requestQueryFail:', err)
     );
@@ -74,7 +87,7 @@ export default function ChatPage() {
             <QueryOutput key={idx} answer={answers[idx] || ''}>{q}</QueryOutput>
           ))}
         </Box>
-        <QueryInput height='95' onQuerySubmit={handleQuerySubmit} />
+        <QueryInput sessionId={sessionId} height='95' onQuerySubmit={handleQuerySubmit} onCompanySubmit={handleCompanySubmit} />
       </Box>
     </Box>
   );

@@ -11,12 +11,38 @@ import SearchIcon from '../../assets/icon/search.png'
 
 import { uploadFile } from '../../api/query';
 
-export default function QueryInput({ height, model, mode, onQuerySubmit, onFileUpload, uploadMessage }) {
+export default function QueryInput({ height, model, mode, onQuerySubmit, onCompanySubmit, onFileUpload, uploadMessage }) {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
     const [file, setFile] = useState();
     const [query, setQuery] = useState('');
+
+    // Company Mapping
+
+    const dictionary = [
+        { keywords: ['네이버', 'naver', 'NAVER'], mappedValue: 'NAVER' },
+        { keywords: ['롯데렌탈', '롯데 렌탈'], mappedValue: '롯데렌탈' },
+        { keywords: ['엘앤에프'], mappedValue: '엘앤에프' },
+        { keywords: ['카뱅', '카카오 뱅크', '카카오뱅크'], mappedValue: '카카오뱅크' },
+        { keywords: ['크래프톤'], mappedValue: '크래프톤' },
+        { keywords: ['한화솔루션', '한화 솔루션'], mappedValue: '한화솔루션' },
+        { keywords: ['제일제당', 'CJ제일제당', 'CJ 제일제당', 'cj제일제당', 'cj 제일제당'], mappedValue: 'CJ제일제당' },
+        { keywords: ['LG화학', 'LG 화학', 'lg화학', 'lg 화학', '엘지화학', '엘지 화학'], mappedValue: 'LG화학' },
+        { keywords: ['SK케미칼', 'SK 케미칼', 'sk케미칼', 'sk 케미칼', '케미칼'], mappedValue: 'SK케미칼' },
+        { keywords: ['SK하이닉스', 'SK 하이닉스', 'sk하이닉스', 'sk 하이닉스', '하이닉스'], mappedValue: 'SK하이닉스' },
+    ]
+
+    function mapCompany(input) {
+        for (const mapping of dictionary) {
+            if (mapping.keywords.some((keyword) => input.includes(keyword))) {
+                return mapping.mappedValue;               
+            }
+        }
+        return '';
+    }
+
+    // Query Input
 
     function onKeyUp(e) {
         if (e.key == 'Enter' && query.trim()) {
@@ -26,15 +52,21 @@ export default function QueryInput({ height, model, mode, onQuerySubmit, onFileU
 
     function onClickSearch() {     
         if (query.trim()) {
-            if (mode === 'main') {
-                navigate('/chat', { state: { query, model } });
+            const company = mapCompany(query);
+            if (onCompanySubmit) onCompanySubmit(company); 
+
+            if (mode === 'main') {                
+                navigate('/chat', { state: { query, model, company } });
             }
             else if (onQuerySubmit) {
+                onCompanySubmit(company);
                 onQuerySubmit(query);
                 setQuery('');                
             }
         }
     }
+
+    // File Upload
 
     function onClickFile() {
         if (fileInputRef.current) {

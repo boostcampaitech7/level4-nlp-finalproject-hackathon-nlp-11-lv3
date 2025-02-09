@@ -45,8 +45,8 @@ export default function QueryOutput({ children, answer }) {
             
             {displayedText ? 
                 <Box sx={{ display: 'flex', height: '50px', margin: '-10px 0 10px 0' }}>
-                    <CustomText size='s' weight='bold' justifyContent='flex-start' mx='15'>💡</CustomText>
-                    <CustomText size='s' weight='bold' justifyContent='flex-start'>답변</CustomText>
+                    <CustomText size='s' weight='bold' justifyContent='flex-start' mx='20'>💬</CustomText>
+                    <CustomText size='s' weight='bold' justifyContent='flex-start' mx='-10'>답변</CustomText>
                 </Box>
                 :
                 <Box sx={{ display: 'flex', height: '50px', margin: '-10px 0 10px 0' }}>

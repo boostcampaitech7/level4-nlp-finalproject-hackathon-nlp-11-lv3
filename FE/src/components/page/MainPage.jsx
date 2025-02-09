@@ -12,7 +12,7 @@ import QueryInput from '../module/QueryInput';
 import SelectModel from '../module/SelectModel';
 
 import LoadingIcon from '../../assets/icon/spinner_black.gif'
-import Frag from '../../assets/icon/frag.png'
+import Logo from '../../assets/logo.png'
 
 export default function MainPage() {
   const [model, setModel] = useState('');
@@ -49,16 +49,17 @@ export default function MainPage() {
 
   return (
     <Box sx={{display: 'flex'}}>
+      <Box sx={{ position: 'absolute', width: '60px', margin: '30px 0 0 85px' }}><img src={Logo} /></Box>
       <SideBar>
         <IndexWidget />
         <ExchangeRateWidget />
-        <Box sx={{ marginTop: 'auto', marginBottom: '20px', width: '80%' }}>
+        <Box sx={{ marginTop: 'auto', marginBottom: '20px' }}>
           <NewsWidget />
         </Box>
       </SideBar>
       
       <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100vw'}}>
-        <CustomText weight='bold' size='xl' my='15' mx='20'>원하는 금융정보를 검색해보세요</CustomText>
+        <CustomText weight='bold' size='xl' my='15' mx='20'>{'원하는 금융정보를 검색해보세요 ' + '🔎'}</CustomText>
         <QueryInput height='130' model={model} mode='main' onFileUpload={handleUpload} uploadMessage={message} />
         <SelectModel onModelChange={handleChange} selectedValue={model} />
         <Box sx={{ display: 'flex', height: '40px', margin: '-45px 0 0 0', alignItems: 'center' }}>

@@ -11,6 +11,7 @@ import QueryInput from '../module/QueryInput';
 import QueryOutput from '../module/QueryOutput';
 
 import HomeIcon from '../../assets/icon/home.png';
+import Logo from '../../assets/logo.png'
 
 import { requestQuery } from '../../api/query';
 
@@ -73,8 +74,9 @@ export default function ChatPage() {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      <Box sx={{ position: 'absolute', width: '60px', margin: '30px 0 0 85px' }}><img src={Logo} /></Box>
       <SideBar>
-        <Box sx={{display: 'flex', width: '100%', justifyContent: 'flex-end', marginTop: '15px', marginRight: '20px'}}>
+        <Box sx={{display: 'flex', width: '100%', justifyContent: 'flex-end', marginTop: '-5px', marginRight: '65px'}}>
           <IconBox onClick={onClickHome}><img src={HomeIcon} /></IconBox>
         </Box>
         {company && <StockWidget company={company} />}

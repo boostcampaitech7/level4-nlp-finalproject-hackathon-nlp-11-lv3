@@ -1,20 +1,21 @@
 from typing import List, Optional
 
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 import numpy as np
 from langchain.docstore.document import Document
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
-from retrieval.base import BaseRetriever
-from utils.query_rewriter import QueryRewriter
-from loguru import logger
-import time
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain.vectorstores import Chroma
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+from loguru import logger
+from retrieval.base import BaseRetriever
+from utils.query_rewriter import QueryRewriter
+
 
 class ChromaRetrieval(BaseRetriever):
     def __init__(self, cfg):
@@ -30,7 +31,7 @@ class ChromaRetrieval(BaseRetriever):
         self.use_mmr = cfg.retrieval.get("use_mmr", True)  # MMR 사용 여부
         self.lambda_mult = cfg.retrieval.get("lambda_mult", 0.5)  # MMR 다양성 가중치
         self.executor = ThreadPoolExecutor(max_workers=4)  # 병렬 처리를 위한 스레드 풀
-        self.reranker = HuggingFaceCrossEncoder(model_name=cfg.retrieval.reranker_model_name) 
+        self.reranker = HuggingFaceCrossEncoder(model_name=cfg.retrieval.reranker_model_name)
         self.compressor = CrossEncoderReranker(model=self.reranker, top_n=15)
 
     @lru_cache(maxsize=1000)
@@ -49,7 +50,6 @@ class ChromaRetrieval(BaseRetriever):
             return db.max_marginal_relevance_search(query, k=k, filter={"company": company})
         else:
             return db.max_marginal_relevance_search(query, k=k)
-        
 
     def _search_with_similarity(self, db: Chroma, query: str, k: int, company: str) -> List[Document]:
         """
@@ -63,37 +63,38 @@ class ChromaRetrieval(BaseRetriever):
         logger.info("No company filter applied, searching entire database")
         return db.similarity_search(query, k=k)
 
-
     def get_relevant_documents_without_query_rewritten(self, query: str, k: int = None) -> List[Document]:
         start_time = time.time()
         all_docs = []
         query_text, company = self.query_rewriter.extract_company(query)
         if not isinstance(query_text, list):
             query_text = [query_text]
-            
+
         db = self._get_db("All_data")
         retriever = db.as_retriever()
-        
-        compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
+
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=self.compressor, base_retriever=retriever
+        )
 
         def search_for_query(q, company):
             if company:
                 return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
             else:
                 return compression_retriever.get_relevant_documents(q, k=k)
-        
+
         futures = [self.executor.submit(search_for_query, q, company) for q in query_text]
         for future in futures:
             all_docs.extend(future.result())
         logger.info(f"Retrieval processed without query rewritten in {time.time() - start_time:.2f} seconds")
         return all_docs
-    
+
     def get_relevant_documents_with_query_rewritten(self, query: str, k: int = None) -> List[Document]:
         if k is None:
             k = self.k
-        
+
         all_docs = []
- 
+
         # 쿼리 리라이터를 통해 쿼리 수정
         rewritten_query = self.query_rewriter.rewrite_query(query)
         print(rewritten_query)
@@ -106,11 +107,11 @@ class ChromaRetrieval(BaseRetriever):
             ret = self._search_with_similarity(self._get_db("All_data"), query, k, None)
             logger.info(f"Retrieval processed in {retrieval_time:.2f} seconds")
             return ret
-        
+
         # 여러 회사에 대한 쿼리인 경우 파이프(|)로 분리
         queries = clean_query.split("|")
         logger.info(f"Parsed queries: {queries}")
-        
+
         if len(queries) == 1:
             # 단일 쿼리 처리
             if queries[0].strip() == "None":
@@ -118,23 +119,24 @@ class ChromaRetrieval(BaseRetriever):
                 ret = self._search_with_similarity(self._get_db("All_data"), query, k, None)
                 logger.info(f"Retrieval processed in {retrieval_time:.2f} seconds")
                 return ret
-            
+
             query_text, company = self.query_rewriter.extract_company(queries[0])
             if not isinstance(query_text, list):
                 query_text = [query_text]
-                
+
             db = self._get_db("All_data")
             retriever = db.as_retriever()
-            
-            compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
 
-            
+            compression_retriever = ContextualCompressionRetriever(
+                base_compressor=self.compressor, base_retriever=retriever
+            )
+
             def search_for_query(q, company):
                 if company:
                     return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
                 else:
                     return compression_retriever.get_relevant_documents(q, k=k)
-            
+
             futures = [self.executor.submit(search_for_query, q, company) for q in query_text]
             for future in futures:
                 all_docs.extend(future.result())
@@ -142,29 +144,29 @@ class ChromaRetrieval(BaseRetriever):
             # 여러 쿼리 처리
             db = self._get_db("All_data")
             retriever = db.as_retriever()
-            compression_retriever = ContextualCompressionRetriever(base_compressor=self.compressor, base_retriever=retriever)
+            compression_retriever = ContextualCompressionRetriever(
+                base_compressor=self.compressor, base_retriever=retriever
+            )
 
             def search_for_query(q, company):
                 if company:
                     return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
                 else:
                     return compression_retriever.get_relevant_documents(q, k=k)
-            
-            
 
             for query_part in queries:
                 if query_part.strip() == "None":
                     continue
-                    
+
                 query_text, company = self.query_rewriter.extract_company(query_part)
                 if not isinstance(query_text, list):
                     query_text = [query_text]
-                
+
                 k_per_query = max(1, k // len(queries))
-                future = self.executor.submit(search_for_query, query_text[0],k_per_query, company)
-                #future = self.executor.submit(search_func, db, query_text[0], k_per_query, company)
+                future = self.executor.submit(search_for_query, query_text[0], k_per_query, company)
+                # future = self.executor.submit(search_func, db, query_text[0], k_per_query, company)
                 all_docs.extend(future.result())
-        
+
         processing_time = time.time() - start_time
         logger.info(f"Retrieval processed in {processing_time:.2f} seconds")
         return all_docs

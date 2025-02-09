@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import os
 import re
 import time
+import warnings
 from pathlib import Path
 
 import hydra
@@ -15,11 +16,13 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
+from loguru import logger
 from rapidfuzz import process
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import pipeline
-from loguru import logger
+
+warnings.filterwarnings("ignore")
 
 """
 기본적으로 gpt-4o-mini 모델을 사용하여 쿼리를 수정합니다.
@@ -52,7 +55,7 @@ project_root = Path(__file__).parent.parent
 
 class QueryRewriter:
     def __init__(self):
-        
+
         self.company_names = os.listdir(project_root / "vector_db")
         self.parser = StrOutputParser()
         self._load_config()
@@ -60,7 +63,7 @@ class QueryRewriter:
 
     def _load_config(self):
         """Hydra 설정 로드"""
-        
+
         # 상대 경로로 config_path 설정
         with hydra.initialize(version_base=None, config_path="../configs"):
             cfg = hydra.compose(config_name="config")
@@ -98,14 +101,13 @@ class QueryRewriter:
         쿼리를 수정하여 더 정확한 검색을 위해 조금 더 구체적으로 작성합니다.
         """
         start_time = time.time()
-        #prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query", "list"])
+        # prompt = PromptTemplate(template=query_rewriting_prompt, input_variables=["query", "list"])
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", query_rewriting_prompt),
                 ("user", "{query}"),
             ]
         )
-
 
         chain = prompt | self.model | self.parser
         # 회사명 리스트를 문자열로 변환

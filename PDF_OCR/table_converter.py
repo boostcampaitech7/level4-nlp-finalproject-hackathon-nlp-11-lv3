@@ -2,11 +2,12 @@ from typing import Dict, List, Union
 
 import json
 import os
+import warnings
 from pathlib import Path
-from bs4 import BeautifulSoup
 
 import pandas as pd
-import warnings
+from bs4 import BeautifulSoup
+
 warnings.filterwarnings("ignore")
 
 
@@ -23,18 +24,18 @@ def json_to_table(json_data: Union[str, Dict]) -> pd.DataFrame:
         html = data["content"]["html"]
 
         # beautifulsoup로 html 파싱
-        soup = BeautifulSoup(html, 'html.parser')
-        
+        soup = BeautifulSoup(html, "html.parser")
+
         # html에서 테이블 추출
         df = pd.read_html(str(soup))[0]
 
-        #csv 저장
+        # csv 저장
         return df
-        #print(f"처리 완료: {output_base} : {file}")
-        
+        # print(f"처리 완료: {output_base} : {file}")
 
     except Exception as e:
         print(f"테이블 데이터 변환 중 오류 발생: {str(e)}")
+
 
 def convert_json_to_csv(
     input_path: Union[str, Path], output_path: Union[str, Path] = None, recursive: bool = False
@@ -88,10 +89,9 @@ def convert_json_to_csv(
         process_file(json_file)
 
 
-                
-        
-
 def main():
     convert_json_to_csv("../../PDF_OCR/new_data/All_data/table.json")
+
+
 if __name__ == "__main__":
-    main() 
+    main()

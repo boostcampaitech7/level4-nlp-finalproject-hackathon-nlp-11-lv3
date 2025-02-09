@@ -4,6 +4,7 @@ import argparse
 import os
 import re
 import shutil
+import sys
 from collections import defaultdict
 from functools import cmp_to_key
 from pathlib import Path
@@ -655,3 +656,4 @@ if __name__ == "__main__":
 
     # 파이프라인 실행
     pdf_parsing_pipeline(custom_config)
+    sys.exit(0)

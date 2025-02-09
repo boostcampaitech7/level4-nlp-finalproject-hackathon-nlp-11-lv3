@@ -1,4 +1,4 @@
-from api.v1.endpoints import documents, query, chatting
+from api.v1.endpoints import chatting, documents, query
 from fastapi import APIRouter
 
 router = APIRouter()

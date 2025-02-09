@@ -2,7 +2,7 @@ import json
 import os
 
 import pandas as pd
-from ocr_api import process_image_ocr
+from ocr_api import process_image_ocr, upstage_ocr
 from table_converter import json_to_table
 
 
@@ -69,7 +69,7 @@ class OCRProcessor:
             try:
                 # 결과가 테이블인 경우
                 if "table" in file.lower():
-                    result = process_image_ocr(input_file, is_table=True)
+                    result = upstage_ocr(input_file)
                     # JSON 결과 저장
                     json_path = f"{output_base}_result.json"
                     with open(json_path, "w", encoding="utf-8") as f:

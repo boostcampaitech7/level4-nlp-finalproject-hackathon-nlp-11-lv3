@@ -102,9 +102,12 @@ class RAGService:
         """검색 결과 캐싱"""
         return self.ensemble_retriever.get_relevant_documents_without_query_rewritten(query=query, k=15)
 
-    async def _retrieve_documents(self, query: str) -> Tuple[str, List[RetrievalResult]]:
+    async def _retrieve_documents(self, query: str, is_rewritten: bool = True) -> Tuple[str, List[RetrievalResult]]:
         """문서 검색 로직"""
-        retrieved_docs = self._get_cached_retrieval_with_query_rewritten(query)
+        if is_rewritten:
+            retrieved_docs = self._get_cached_retrieval_with_query_rewritten(query)
+        else:
+            retrieved_docs = self._get_cached_retrieval_without_query_rewritten(query)
         docs_text = ""
         retrieval_results = []
 
@@ -171,7 +174,7 @@ class RAGService:
 
         try:
             with RETRIEVAL_LATENCY.time():
-                docs_text, retrieval_results = await self._retrieve_documents(request.query)
+                docs_text, retrieval_results = await self._retrieve_documents(request.query, False)
 
             if not retrieval_results:
                 logger.warning("No retrieval results found")
@@ -222,7 +225,7 @@ class RAGService:
 
         try:
             # 문서 검색
-            docs_text, retrieval_results = await self._retrieve_documents(query)
+            docs_text, retrieval_results = await self._retrieve_documents(query, True)
 
             if not retrieval_results:
                 company = "unknown"

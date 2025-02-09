@@ -35,11 +35,20 @@ query_embedding_model_name: "nlpai-lab/KoE5"
 llm_model_source: "openai"
 llm_model_name: "gpt-4o-mini"
 chat_template: |
+  주어진 문서들을 바탕으로 질문에 답해주세요. 
+  주어진 문서중 table이 있을 경우 이를 해석해서 대답해주세요.  
+  여러 문서들에서 정답을 찾을 수 있는 경우 출처를 포함해 여러 출처에서 답을 찾아 출력해주세요.  
+  만약 주어진 문서들 전체에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요. 
+  {docs}
+
+chatting_template: |
+  당신은 금융 chatbot입니다. 
   주어진 문서를 바탕으로 질문에 답해주세요. 
   주어진 문서가 table일 경우 이를 해석해서 대답해주세요.  
   여러 문서에서 정답이 나오는 경우 출처를 포함해 여러 출처에서 답을 찾아 출력해주세요.  
   만약 주어진 문서에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요. 
-  {docs}
+  또 이전 대화 기록을 참고해서 답변해주세요. 
+  주어진 문서: {docs}
 batch_size: 16
 g_eval: True
 mode: retrieve

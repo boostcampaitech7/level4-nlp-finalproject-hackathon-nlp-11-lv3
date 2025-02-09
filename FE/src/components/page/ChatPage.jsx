@@ -6,6 +6,7 @@ import SideBar from '../atom/SideBar';
 import IconBox from '../atom/IconBox';
 
 import StockWidget from '../module/StockWidget';
+import StockNewsWidget from '../module/StockNewsWidget';
 import QueryInput from '../module/QueryInput';
 import QueryOutput from '../module/QueryOutput';
 
@@ -54,7 +55,6 @@ export default function ChatPage() {
         temperature,
         chatHistory,
         (res) => {     
-            console.log(res);
             setSessionId(res.data.session_id);
             if (company === '') setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
             setAnswers((prev) => [...prev, res.data.answer]);
@@ -74,10 +74,12 @@ export default function ChatPage() {
   return (
     <Box sx={{ display: 'flex' }}>
       <SideBar>
-        <IconBox onClick={onClickHome}><img src={HomeIcon} /></IconBox>
+        <Box sx={{display: 'flex', width: '100%', justifyContent: 'flex-end', marginTop: '15px', marginRight: '20px'}}>
+          <IconBox onClick={onClickHome}><img src={HomeIcon} /></IconBox>
+        </Box>
         {company && <StockWidget company={company} />}
-        <Box sx={{ marginTop: 'auto', marginBottom: '20px', width: '80%' }}>
-            {/* <StockNewsWidget>{company? company : ''}</StockNewsWidget> */}
+        <Box sx={{ marginTop: 'auto', marginBottom: '20px' }}>
+            {company && <StockNewsWidget>{company}</StockNewsWidget>}
         </Box>
       </SideBar>
 

@@ -46,10 +46,10 @@ export default function NewsWidget() {
     }, [newsData]);
 
     return (
-        <CustomContainer color="303032" radius="8" width="190px" height="auto">
+        <CustomContainer color="454545" radius="7" width="190px" height="auto">
             {newsData.length > 0 ? (
                 <CustomText size="xxs" mx="15">
-                    {newsData[currentIndex].title}
+                    {'📢' + ' ' + newsData[currentIndex].title}
                 </CustomText>
             ) : null}
         </CustomContainer>

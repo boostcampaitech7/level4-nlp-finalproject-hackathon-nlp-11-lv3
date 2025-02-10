@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { styled, Box } from '@mui/system'
 import CustomText from '../atom/CustomText';
 import SideBar from '../atom/SideBar'
-import IconBox from '../atom/IconBox';
 
 import IndexWidget from '../module/IndexWidget';
 import ExchangeRateWidget from '../module/ExchangeRateWidget';
@@ -11,7 +10,6 @@ import NewsWidget from '../module/NewsWidget';
 import QueryInput from '../module/QueryInput';
 import SelectModel from '../module/SelectModel';
 
-import LoadingIcon from '../../assets/icon/spinner_black.gif'
 import Logo from '../../assets/logo.png'
 
 export default function MainPage() {

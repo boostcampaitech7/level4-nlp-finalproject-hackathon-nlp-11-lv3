@@ -9,7 +9,7 @@ router = APIRouter()
 rag_service = RAGService()
 
 
-@router.post("/", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse)
 async def chatting(request: ChatRequest):
     try:
         # 세션 ID가 없으면 새로 생성

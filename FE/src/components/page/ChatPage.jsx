@@ -81,7 +81,7 @@ export default function ChatPage() {
         </Box>
         {company && <StockWidget company={company} />}
         <Box sx={{ marginTop: 'auto', marginBottom: '20px' }}>
-            {company && <StockNewsWidget>{company}</StockNewsWidget>}
+            {company && <StockNewsWidget company={company} />}
         </Box>
       </SideBar>
 

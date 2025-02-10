@@ -28,7 +28,7 @@ export default function IndexWidget() {
       hipr: data.hipr, // 고가
       lopr: data.lopr, // 저가
       vs: data.vs, // 전일 대비
-      fltRt: data.fltRt, // 등락률
+      fltRt: parseFloat(data.fltRt), // 등락률
     });
   }
 
@@ -49,11 +49,15 @@ export default function IndexWidget() {
   } 
 
   useEffect(() => {
-    getIndex();
+    const timer = setTimeout(() => {
+      getIndex();      
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [])
 
   return (
-    <Box sx={{ display: 'flex', cursor: 'pointer' }}>
+    <Box sx={{ display: 'flex' }}>
       {indexData ? (
         <CustomContainer color='303030' radius='8' width='190px' height='210' flexDirection='column' my='170px'>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>

@@ -10,6 +10,7 @@ import LoadingIcon from '../../assets/icon/spinner_widget.gif'
 const LIVE_URL = 'https://api.currencylayer.com/live';
 const HISTORICAL_URL = 'https://api.currencylayer.com/historical';
 const apiKey = import.meta.env.VITE_EXCHANGERATE_API_KEY;
+const historicalApiKey = import.meta.env.VITE_HISTORICAL_EXCHANGERATE_API_KEY;
 
 export default function ExchangeRateWidget() {
   const [rateData, setRateData] = useState({});
@@ -29,7 +30,6 @@ export default function ExchangeRateWidget() {
       })
 
       if (res.data.success) {
-        console.log('today: ', res.data);
         const usdToKrw = res.data.quotes.USDKRW;
         const jpyToKrw = res.data.quotes.USDJPY ? usdToKrw / res.data.quotes.USDJPY : null;
         const eurToKrw = res.data.quotes.USDEUR ? usdToKrw / res.data.quotes.USDEUR : null;
@@ -55,15 +55,14 @@ export default function ExchangeRateWidget() {
     try {
       const res = await axios.get(HISTORICAL_URL, {
         params: {
-          access_key: apiKey,
+          access_key: historicalApiKey,
           currencies: 'KRW,JPY,EUR,CNY',
           source: 'USD',
           date: moment().subtract(1, 'days').format('YYYY-MM-DD'),
         }
       })
 
-      if (res.data.success) {
-        console.log('yesterday: ', res.data);
+      if (res.data.success) {     
         const usdToKrw = res.data.quotes.USDKRW;
         const jpyToKrw = res.data.quotes.USDJPY ? usdToKrw / res.data.quotes.USDJPY : null;
         const eurToKrw = res.data.quotes.USDEUR ? usdToKrw / res.data.quotes.USDEUR : null;
@@ -79,7 +78,7 @@ export default function ExchangeRateWidget() {
         throw new Error(res.data.error.info);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message);      
     } finally {
       setYesterdayLoading(false);
     }

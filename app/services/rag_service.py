@@ -18,7 +18,6 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.messages import AIMessage, HumanMessage
 from loguru import logger
 from omegaconf import DictConfig
-from prometheus_client import Counter, Histogram
 from RAG.generator import get_llm_api
 from schemas.rag import QueryRequest, RetrievalResult
 
@@ -34,9 +33,6 @@ from RAG.retrieval import ChromaRetrieval
 # from RAG.source.generate import generate
 
 # 메트릭 정의
-QUERY_COUNTER = Counter("rag_query_total", "Total number of RAG queries")
-QUERY_LATENCY = Histogram("rag_query_latency_seconds", "RAG query latency in seconds")
-RETRIEVAL_LATENCY = Histogram("rag_retrieval_latency_seconds", "Document retrieval latency")
 
 
 class RAGService:
@@ -95,12 +91,12 @@ class RAGService:
     @lru_cache(maxsize=1000)
     def _get_cached_retrieval_with_query_rewritten(self, query: str) -> List[RetrievalResult]:
         """검색 결과 캐싱"""
-        return self.ensemble_retriever.get_relevant_documents_with_query_rewritten(query=query, k=15)
+        return self.ensemble_retriever.get_relevant_documents_with_query_rewritten(query=query, k=20)
 
     @lru_cache(maxsize=1000)
     def _get_cached_retrieval_without_query_rewritten(self, query: str) -> List[RetrievalResult]:
         """검색 결과 캐싱"""
-        return self.ensemble_retriever.get_relevant_documents_without_query_rewritten(query=query, k=15)
+        return self.ensemble_retriever.get_relevant_documents_without_query_rewritten(query=query, k=20)
 
     async def _retrieve_documents(self, query: str, is_rewritten: bool = True) -> Tuple[str, List[RetrievalResult]]:
         """문서 검색 로직"""
@@ -140,8 +136,8 @@ class RAGService:
 
         from asyncio import gather
 
-        if len(retrieved_docs) > 15:
-            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:15]])
+        if len(retrieved_docs) > 7:
+            processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs[:7]])
         else:
             processed_contents = await gather(*[process_doc(doc) for doc in retrieved_docs])
         docs_text = "\n".join(processed_contents)
@@ -150,8 +146,12 @@ class RAGService:
 
     async def _generate_response(self, query: str, docs_text: str, llm_model: Optional[str] = None) -> str:
         """LLM 응답 생성 로직"""
-        if llm_model == "GPT-4o" or llm_model == "GPT-4o-mini" or llm_model == None:
+        if llm_model == "GPT-4o-mini" :
             self.cfg.llm_model_name = "gpt-4o-mini"
+            self.cfg.llm_model_source = "openai"
+            llm = get_llm_api(self.cfg)
+        elif llm_model == "GPT-4o" or llm_model == None:
+            self.cfg.llm_model_name = "gpt-4o"
             self.cfg.llm_model_source = "openai"
             llm = get_llm_api(self.cfg)
         elif llm_model == "CLOVA X":
@@ -164,17 +164,17 @@ class RAGService:
             [("system", self.cfg.chat_template), ("user", f"질문: {query}")]
         )
         prompt = prompt_template.invoke({"docs": docs_text})
+        start_time = time.time()
         answer = llm.invoke(prompt)
+        #LLM response time log 
+        logger.info(f"LLM response time: {time.time() - start_time:.2f} seconds")
         return answer.content
 
     async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
         """일반 쿼리 처리"""
-        QUERY_COUNTER.inc()
         start_time = time.time()
-
-        try:
-            with RETRIEVAL_LATENCY.time():
-                docs_text, retrieval_results = await self._retrieve_documents(request.query, False)
+        try:           
+            docs_text, retrieval_results = await self._retrieve_documents(request.query, False)
 
             if not retrieval_results:
                 logger.warning("No retrieval results found")
@@ -194,8 +194,7 @@ class RAGService:
             raise
         finally:
             processing_time = time.time() - start_time
-            QUERY_LATENCY.observe(processing_time)
-
+            
     async def process_chat(
         self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None
     ) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:

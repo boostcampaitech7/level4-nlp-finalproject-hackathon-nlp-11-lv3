@@ -133,6 +133,7 @@ class ChromaRetrieval(BaseRetriever):
 
             def search_for_query(q, company):
                 if company:
+                    logger.info(f"Applying company filter: {company}")
                     return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
                 else:
                     return compression_retriever.get_relevant_documents(q, k=k)
@@ -150,6 +151,7 @@ class ChromaRetrieval(BaseRetriever):
 
             def search_for_query(q, k_per_query, company):
                 if company:
+                    logger.info(f"Applying company filter: {company}")
                     return compression_retriever.get_relevant_documents(q, k=k_per_query, filter={"company": company})
                 else:
                     return compression_retriever.get_relevant_documents(q, k=k_per_query)

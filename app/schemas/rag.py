@@ -10,7 +10,7 @@ class ChatMessage(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str = Field(..., description="사용자의 질문")
-    llm_model: Optional[str] = Field(default="GPT-4o-mini", description="질문에 답변할 LLM")
+    llm_model: Optional[str] = Field(default="GPT-4o", description="질문에 답변할 LLM")
     max_tokens: Optional[int] = Field(default=1000, description="생성할 최대 토큰 수")
     temperature: Optional[float] = Field(default=0.7, description="생성 텍스트의 다양성 (0.0 ~ 1.0)")
     company: Optional[str] = None
@@ -26,7 +26,7 @@ class RetrievalResult(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str = Field(..., description="생성된 답변")
-    retrieved_documents: List[RetrievalResult] = Field(..., description="검색된 관련 문서들")
+    context: List[RetrievalResult] = Field(..., description="검색된 관련 문서들")
     processing_time: float = Field(..., description="처리 시간 (초)")
     company: Optional[str] = None
 

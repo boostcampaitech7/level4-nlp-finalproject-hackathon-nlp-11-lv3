@@ -5,9 +5,9 @@ import os
 import shutil
 import warnings
 
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from omegaconf import DictConfig
 from tqdm import tqdm
 
@@ -49,7 +49,10 @@ class VectorStore:
                 "date": item["date"],
                 "path": item["path"],
             }
-
+            if item["page"] is isinstance(int):
+                page_info = str(item["page"])
+            else:
+                page_info = item["page"]
             # Document 객체 생성
             doc = Document(
                 page_content="<"
@@ -58,8 +61,8 @@ class VectorStore:
                 + item["description"]
                 + "< 출처 : "
                 + item["securities"]
-                + "_"
-                + item["page"]
+                + "page_"
+                + page_info
                 + ">",
                 metadata=metadata,
             )

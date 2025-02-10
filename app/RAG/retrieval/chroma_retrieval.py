@@ -148,11 +148,11 @@ class ChromaRetrieval(BaseRetriever):
                 base_compressor=self.compressor, base_retriever=retriever
             )
 
-            def search_for_query(q, company):
+            def search_for_query(q, k_per_query, company):
                 if company:
-                    return compression_retriever.get_relevant_documents(q, k=k, filter={"company": company})
+                    return compression_retriever.get_relevant_documents(q, k=k_per_query, filter={"company": company})
                 else:
-                    return compression_retriever.get_relevant_documents(q, k=k)
+                    return compression_retriever.get_relevant_documents(q, k=k_per_query)
 
             for query_part in queries:
                 if query_part.strip() == "None":

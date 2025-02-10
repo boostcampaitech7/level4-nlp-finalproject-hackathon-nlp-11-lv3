@@ -5,8 +5,8 @@ import os
 import shutil
 import warnings
 
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from omegaconf import DictConfig
 from tqdm import tqdm

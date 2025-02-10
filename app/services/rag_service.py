@@ -146,7 +146,7 @@ class RAGService:
 
     async def _generate_response(self, query: str, docs_text: str, llm_model: Optional[str] = None) -> str:
         """LLM 응답 생성 로직"""
-        if llm_model == "GPT-4o-mini" :
+        if llm_model == "GPT-4o-mini":
             self.cfg.llm_model_name = "gpt-4o-mini"
             self.cfg.llm_model_source = "openai"
             llm = get_llm_api(self.cfg)
@@ -166,14 +166,14 @@ class RAGService:
         prompt = prompt_template.invoke({"docs": docs_text})
         start_time = time.time()
         answer = llm.invoke(prompt)
-        #LLM response time log 
+        # LLM response time log
         logger.info(f"LLM response time: {time.time() - start_time:.2f} seconds")
         return answer.content
 
     async def process_query(self, request: QueryRequest) -> Tuple[str, List[RetrievalResult], float, str]:
         """일반 쿼리 처리"""
         start_time = time.time()
-        try:           
+        try:
             docs_text, retrieval_results = await self._retrieve_documents(request.query, False)
 
             if not retrieval_results:
@@ -194,7 +194,7 @@ class RAGService:
             raise
         finally:
             processing_time = time.time() - start_time
-            
+
     async def process_chat(
         self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None
     ) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:

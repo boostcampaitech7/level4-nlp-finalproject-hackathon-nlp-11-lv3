@@ -199,6 +199,14 @@ class RAGService:
         self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None
     ) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:
         """채팅 처리"""
+        #user query caching
+        if session_id not in self.query_cache:
+            self.query_cache[session_id] = []
+        
+        self.query_cache[session_id].append(query)
+        if len(self.query_cache[session_id]) > 2:
+            self.query_cache[session_id].pop(0)
+
         # 세션 기록 초기화 또는 가져오기
         if session_id not in self.chat_histories:
             self.chat_histories[session_id] = ChatMessageHistory()
@@ -224,7 +232,9 @@ class RAGService:
 
         try:
             # 문서 검색
-            docs_text, retrieval_results = await self._retrieve_documents(query, True)
+            # 최근 두개의 질문을 합친 문장을 검색
+            previous_user_query = ' '.join(self.query_cache[session_id])
+            docs_text, retrieval_results = await self._retrieve_documents(previous_user_query + "\n" + query, True)
 
             if not retrieval_results:
                 company = "unknown"

@@ -80,11 +80,12 @@ class QueryRewriter:
         # query 대문자로 변경
         query = query.upper()
         # 회사명 추출
-
+        print("Company names: ", self.company_names)
         for company in self.company_names:
             if company in query:
                 # 회사명을 쿼리에서 제거하고 공백 정리
                 cleaned_query = re.sub(company, "", query).strip()
+                print("Company extracted: ", company)
                 return cleaned_query, company
         # fuzzy 회사명 추출
         matches = process.extract(query, self.company_names, limit=1)
@@ -92,6 +93,7 @@ class QueryRewriter:
             company = matches[0][0]
             # 회사명을 쿼리에서 제거하고 공백 정리
             cleaned_query = re.sub(company, "", query).strip()
+            print("Company extracted: ", company)
             return cleaned_query, company
         # ner 회사명 추출후 유사도 기반 회사명 추출
         return query, None

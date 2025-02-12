@@ -129,20 +129,19 @@ class MakeData:
                 broker_path = os.path.join(company_path, broker)
                 if not os.path.isdir(broker_path):
                     continue
-
+                print(f"증권사별 폴더 순회: {broker}")
                 # 증권사별 결과 폴더 생성
                 broker_output = os.path.join(company_output, broker)
                 if not os.path.exists(broker_output):
                     os.makedirs(broker_output)
 
                 # 페이지별 폴더 순회
-                for page in os.listdir(company_path):
-                    page_path = os.path.join(company_path, page)
+                for page in os.listdir(broker_path):
+                    page_path = os.path.join(broker_path, page)
                     if not os.path.isdir(page_path):
                         continue
-
                     # 페이지별 결과 폴더 생성 헷갈려죽겠네
-                    page_output = os.path.join(company_output, page)
+                    page_output = os.path.join(broker_output, page)
                     if not os.path.exists(page_output):
                         os.makedirs(page_output)
 
@@ -153,7 +152,6 @@ class MakeData:
                             continue
                         if not "table" in file:
                             continue
-                        print(f"table 처리 중: {file}")
                         description = self.process_table_json_files(os.path.join(page_path, file))
                         broker_date = broker.split("_")[-1]
                         broker_name = broker_date.split("(")[0]
@@ -288,45 +286,45 @@ class TextDataPostprocess:
                 broker_output = os.path.join(company_output, broker)
                 if not os.path.exists(broker_output):
                     os.makedirs(broker_output)
-
+                
                 # 페이지별 폴더 순회
-                for page in os.listdir(company_path):
-                    page_path = os.path.join(company_path, page)
+                for page in os.listdir(broker_path):
+                    page_path = os.path.join(broker_path, page)
                     if not os.path.isdir(page_path):
                         continue
                     
                     # 페이지별 결과 폴더 생성 헷갈려죽겠네
-                    page_output = os.path.join(company_output, page)
+                    page_output = os.path.join(broker_output, page)
                     
                     if not os.path.exists(page_output):
                         os.makedirs(page_output)
+                        
 
-                        # html 파일 처리
-
-                        for file in os.listdir(page_path):
-                            if not file.lower().endswith((".json")):
-                                continue
-                            if not "text" in file:
-                                continue
-                            print(f"text 처리 중: {file}")
-                            description = self.process_text_json_files(os.path.join(page_path, file))
-                            broker_date = broker.split("_")[-1]
-                            broker_name = broker_date.split("(")[0]
-                            broker_date = broker_date.split("(")[1].replace(")", "")
-                            data_category = file.split("_")[1]
-                            print(description)
-                            data.append(
-                                {
-                                    "title": "",
-                                    "description": description,
-                                    "category": "text",
-                                    "company": company,
-                                    "securities": "All_data",
-                                    "page": page,
-                                    "date": "All_data",
-                                    "path": f"./ocr_results/{company}/{page}/{file}",
-                                }
-                            )
+                    for file in os.listdir(page_path):
+                        
+                        if not file.lower().endswith((".json")):
+                            continue
+                        if not "text" in file:
+                            continue
+                        print(f"text 처리 중: {file}")
+                        description = self.process_text_json_files(os.path.join(page_path, file))
+                        broker_date = broker.split("_")[-1]
+                        broker_name = broker_date.split("(")[0]
+                        broker_date = broker_date.split("(")[1].replace(")", "")
+                        data_category = file.split("_")[1]
+                        print(description)
+                        data.append(
+                            {
+                                "title": "",
+                                "description": description,
+                                "category": "text",
+                                "company": company,
+                                "securities": "All_data",
+                                "page": page,
+                                "date": "All_data",
+                                "path": f"./ocr_results/{company}/{page}/{file}",
+                            }
+                        )
         with open("new_data/All_data/text_data.json", "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -353,8 +351,8 @@ class TextDataPostprocess:
 
 def main():
 
-    processor = MakeData()
-    processor.process_folders()
+    # processor = MakeData()
+    # processor.process_folders()
 
     processor2 = TextDataPostprocess()
     processor2.process_folders()

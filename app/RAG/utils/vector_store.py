@@ -50,18 +50,20 @@ class VectorStore:
                 "path": item["path"],
             }
             if isinstance(item["page"], int):
-                page_info = str(item["page"])
+                page_info = "page_" + str(item["page"])
             else:
                 page_info = item["page"]
             if item["category"] == "figure" and item["title"] != None:
-                    doc = Document(
+                doc = Document(
                     page_content="<"
                     + item["company"]
-                    + ">" + item["title"] + " "
+                    + ">"
+                    + item["title"]
+                    + " "
                     + item["description"]
                     + "< 출처 : "
                     + item["securities"]
-                    + "page_"
+                    + " "
                     + page_info
                     + ">"
                     + "<기준날짜 : "
@@ -73,18 +75,18 @@ class VectorStore:
                 # Document 객체 생성
                 doc = Document(
                     page_content="<"
-                + item["company"]
-                + ">"
-                + item["description"]
-                + "< 출처 : "
-                + item["securities"]
-                + "page_"
-                + page_info
-                + ">\n"
-                + "<기준날짜 : "
-                + item["date"]
-                + ">",
-                metadata=metadata,
+                    + item["company"]
+                    + ">"
+                    + item["description"]
+                    + "< 출처 : "
+                    + item["securities"]
+                    + " "
+                    + page_info
+                    + ">"
+                    + "<기준날짜 : "
+                    + item["date"]
+                    + ">",
+                    metadata=metadata,
                 )
             documents.append(doc)
         return documents
@@ -157,7 +159,7 @@ class VectorStore:
             text_data = self.load_json_data(text_json_path)
             table_data = self.load_json_data(table_json_path)
 
-        # 모든 데이터 통합
+            # 모든 데이터 통합
             all_data = text_data + table_data
         documents = self.create_documents(all_data)
         # 모든 데이터를 통합한 벡터 DB 업데이트

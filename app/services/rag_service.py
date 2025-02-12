@@ -180,7 +180,15 @@ class RAGService:
                 logger.warning("No retrieval results found")
                 company = "unknown"
             else:
-                company = retrieval_results[0].company
+                # docs 에포함된 company 중 가장 많은 회사
+                company_counts = {}
+                for result in retrieval_results:
+                    company = result.company
+                    if company in company_counts:
+                        company_counts[company] += 1
+                    else:
+                        company_counts[company] = 1
+                company = max(company_counts, key=company_counts.get)
 
             answer_text = await self._generate_response(request.query, docs_text, request.llm_model)
 
@@ -199,10 +207,10 @@ class RAGService:
         self, session_id: str, query: str, llm_model: str, chat_history: Optional[List[dict]] = None
     ) -> Tuple[str, List[RetrievalResult], float, str, List[dict]]:
         """채팅 처리"""
-        #user query caching
+        # user query caching
         if session_id not in self.query_cache:
             self.query_cache[session_id] = []
-        
+
         self.query_cache[session_id].append(query)
         if len(self.query_cache[session_id]) > 2:
             self.query_cache[session_id].pop(0)
@@ -233,13 +241,20 @@ class RAGService:
         try:
             # 문서 검색
             # 최근 두개의 질문을 합친 문장을 검색
-            previous_user_query = ' '.join(self.query_cache[session_id])
+            previous_user_query = " ".join(self.query_cache[session_id])
             docs_text, retrieval_results = await self._retrieve_documents(previous_user_query + "\n" + query, True)
 
             if not retrieval_results:
                 company = "unknown"
             else:
-                company = retrieval_results[0].company
+                company_counts = {}
+                for result in retrieval_results:
+                    company = result.company
+                    if company in company_counts:
+                        company_counts[company] += 1
+                    else:
+                        company_counts[company] = 1
+                company = max(company_counts, key=company_counts.get)
 
             # 채팅 컨텍스트를 포함한 프롬프트 생성
             chat_context = "\n".join(

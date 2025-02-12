@@ -100,7 +100,7 @@ class MakeData:
                             }
                         )
                 # 처리된 파일 로그 파일 제거
-                        
+
                 #
                 retry_count += 1
 
@@ -124,7 +124,7 @@ class MakeData:
             if not os.path.exists(company_output):
                 os.makedirs(company_output)
 
-            #증권사별 폴더 순회
+            # 증권사별 폴더 순회
             for broker in os.listdir(company_path):
                 broker_path = os.path.join(company_path, broker)
                 if not os.path.isdir(broker_path):
@@ -237,7 +237,7 @@ class MakeData:
         }
         self.failed_logs.append(log_entry)
         with open("fail_logs.json", "w", encoding="utf-8") as f:
-            json.dump(self.failed_logs,f, ensure_ascii=False, indent=2)
+            json.dump(self.failed_logs, f, ensure_ascii=False, indent=2)
 
 
 class TextDataPostprocess:
@@ -282,26 +282,25 @@ class TextDataPostprocess:
                 if not os.path.isdir(broker_path):
                     continue
 
-            #     # 증권사별 결과 폴더 생성
+                #     # 증권사별 결과 폴더 생성
                 broker_output = os.path.join(company_output, broker)
                 if not os.path.exists(broker_output):
                     os.makedirs(broker_output)
-                
+
                 # 페이지별 폴더 순회
                 for page in os.listdir(broker_path):
                     page_path = os.path.join(broker_path, page)
                     if not os.path.isdir(page_path):
                         continue
-                    
+
                     # 페이지별 결과 폴더 생성 헷갈려죽겠네
                     page_output = os.path.join(broker_output, page)
-                    
+
                     if not os.path.exists(page_output):
                         os.makedirs(page_output)
-                        
 
                     for file in os.listdir(page_path):
-                        
+
                         if not file.lower().endswith((".json")):
                             continue
                         if not "text" in file:

@@ -57,11 +57,43 @@
 
 ![pdf-ocr_flowchart](images/pdf-ocr_flowchart.png)
 
+```bash
+python pdf_parser.py -i "./pdf/input_pdf_folder"
+python data_postprocessor.py
+```
+
 ## 2. RAG
 
 📑 **[RAG 상세 설명 보기](app/RAG/README.md)**
 
 ### 2.1 실행
+
+```bash
+cd app/RAG
+
+# retrieval 평가
+python main.py mode=retrieve
+
+# generator 평가
+python main.py mode=generate
+
+# vectordb 생성 및 업데이트
+python main.py mode=update_vectordb
+```
+
+### 2.2 평가 데이터 구축
+
+- 목적
+  - Retriever의 Top-K Accuracy 평가 및 Retriever, Generator의 G-Eval 평가 수행
+- 방법
+  - **질문 생성**: GPT를 활용하여 PDF에서 각 종목의 증권사마다 text 기반 질문 10개씩 생성
+  - **Query 정제**: 각 종목별로 100개의 Query를 생성한 후, 중복을 제거하여 최종 Query 선정
+  - **답변 추출**: 정제된 Query를 각 증권사 리포트에 적용하여 answers 도출
+  - **Ground Truth 강화**: 종목별로 다양한 증권사(5~6개)를 선정하여 Ground Truth의 품질 향상
+  - **표&그림 질문 추가**: 표와 그림을 기반으로 한 질문을 10개 추가 생성
+- 활용
+  - Retrieval Top-K Accuracy에는 전체 1,843개 활용
+  - G-Eval 평가는 1,843개 중 75개 샘플 사용
 
 ## 3. API
 
@@ -69,18 +101,18 @@
 
 REST API 개발 (파이썬 API, Query API)
 
-### 3.1 Endpoint
-
-- query
-- documents
-- chatting
-
-### 3.2 실행
+### 3.1 실행
 
 ```bash
 cd app
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### 3.2 Endpoint
+
+- query
+- documents
+- chatting
 
 ## 4. FE
 
@@ -105,17 +137,21 @@ npm run dev
 
 # 결과
 
-### 1. **기술적인 배움**
+### 사용 기술
 
-- 새롭게 배운 도구 : Langchain, Deepeval 🛠️
-- 기술적 도전 : RAG 파이프라인은 쉬워 보이나, 많은 엔지니어링 작업 필요
-- 사용된 기술 : Asyncio, BackgroundTasks ⚙️
+- **OCR**: DocLayout-Yolo, Clova OCR, Upstage Parser API
+- **VectorDB**: ChromaDB
+- **Retriever: Langchain**
+- **Generator**: Langchain, LLM-based Answering Model (gpt-4o, Clova X)
+- **Evaluation**: G-Eval, Top-K Accuracy
+- API server: Fastapi
+- **Web Front-end**: React.js, Tailwind CSS
 
-### 2. **팀워크 & 협업 경험**
+### 팀워크 & 협업 경험
 
 - 협업 도구 : Github issue와 discussion으로 task 할당 및 토의 🤝
 - Commit 관리 : Github commit message template으로 일관성 유지, 협업 효율 증대 📚
 
-### 3. **프로젝트 진행 방식**
+### 프로젝트 진행 방식
 
 - 프로젝트 관리 : Notion에 완료된 일 공유, Zoom meeting을 통해 진행 상황 토의

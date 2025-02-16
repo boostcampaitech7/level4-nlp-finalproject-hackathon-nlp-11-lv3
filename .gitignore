@@ -35,3 +35,6 @@ outputs/
 dist/
 passage_encoder/
 query_encoder/
+
+!images/
+!images/**/*

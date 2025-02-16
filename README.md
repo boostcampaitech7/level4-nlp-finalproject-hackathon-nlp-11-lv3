@@ -56,7 +56,7 @@
 📑 **[PDF OCR 상세 설명 보기](PDF_OCR/README.MD)**
 
 ![pdf-ocr_flowchart](images/pdf-ocr_flowchart.png)
-
+### 1.1 실행
 ```bash
 python pdf_parser.py -i "./pdf/input_pdf_folder"
 python data_postprocessor.py

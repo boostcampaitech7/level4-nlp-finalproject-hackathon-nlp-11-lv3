@@ -14,7 +14,7 @@ export default function ExchangeRateBox({ children, rate, yesterdayRate }) {
             <CustomText size='xxs'>{children}</CustomText>
             <CustomText size='xs' weight='bold'>{currentRate?.toFixed(2)}</CustomText>
             <CustomText size='xxs' color={vs < 0 ? 'down' : 'up'}>
-                {vs < 0 ? `▼${vs.toFixed(2)}` : `▲${Math.abs(vs).toFixed(2)}`}
+                {vs < 0 ? `▼${Math.abs(vs).toFixed(2)}` : `▲${Math.abs(vs).toFixed(2)}`}
             </CustomText>
             <CustomText size='xxs' color={fltRt < 0 ? 'down' : 'up'}>
                 {`${fltRt.toFixed(2)}%`}

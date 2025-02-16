@@ -95,12 +95,71 @@ python main.py mode=update_vectordb
   - Retrieval Top-K Accuracy에는 전체 1,843개 활용
   - G-Eval 평가는 1,843개 중 75개 샘플 사용
 
+### 2.3 Embedding Model 평가
+
+|  | Top_1 | Top_5 | Top_10 | Top_20 | Top_30 | Top_50 |
+| --- | --- | --- | --- | --- | --- | --- |
+| TF-IDF | 9.80 | 22.55 | 37.52 | 59.89 | 72.64 | 90.94 |
+| BM25 | 12.20 | 28.84 | 42.33 | 63.59 | 79.85 | 96.12 |
+| klue/roberta-large | 2.40 | 11.46 | 20.89 | 38.26 | 59.15 | 86.88 |
+| klue/bert base | 5.73 | 17.38 | 30.50 | 49.35 | 66.73 | 87.62 |
+| multilingual-e5-large-instruct | 11.09 | 29.94 | 44.92 | 66.17 | 80.41 | 94.82 |
+| nlpai-lab/KoE5 | 15.16 | 38.26 | 53.42 | 71.72 | 81.52 | 93.53 |
+| BAAI/bge-m3 | 15.34 | 41.22 | 56.38 | 73.94 | 84.84 | 96.30 |
+| nlpai-lab/KURE-v1 | 16.64 | 42.41 | 58.41 | 76.53 | 85.03 | 95.38 |
+
+nlpai-lab의 KoE5와 KURE-v1이 우수한 성능을 보였다. 실제 문서를 검토한 결과 특정 Query에 대한 검색 성능이 더 뛰어난 KoE5를 최종 모델로 선택하였다.
+### 2.4 Embedding Model Fine-Tuning
+
+- Fine-tuning 데이터: [virattt/financial-qa-10K](https://huggingface.co/datasets/virattt/financial-qa-10K)를 번역한 데이터
+- Query Encoder와 Passage Encoder를 나누어 Hard Negative 없이 In-Batch Negatives 방식으로 Multiple Negatives Ranking Loss을 사용하여 학습
+- 결과(Top-K Accuracy)
+    
+    
+    |  | KoE5 | Fine-Tuned Model |
+    | --- | --- | --- |
+    | Top-1 | 15.16 | 18.11 |
+    | Top-5 | 38.26 | 43.07 |
+    | Top-10 | 53.42 | 58.78 |
+    | Top-20 | 71.72 | 75.60 |
+    | Top-30 | 81.52 | 85.40 |
+    | Top-50 | 93.53 | 95.93 |
+
+### 2.5 Vector Store
+
+- ChromaDB: Metadata를 저장하여 Filtering 기능을 제공하고, 회사별 검색이 가능해 정보의 정확성을 높일 수 있다. 또한, 서버 실행 중에도 DB를 업데이트할 수 있어 유연성이 뛰어나 이러한 점 때문에 선택했다.
+
+### 2.6 Reranker
+
+- Cross Encoder로 문서와 질의의 유사도를 측정하여 문서를 재정렬
+- 실험
+
+|| Top_1 | Top_5 | Top_10 | Top_20 | Top_30 | Top_50 |
+| --- | --- | --- | --- | --- | --- | --- |
+| nlpai-lab/KoE5 | 15.16 | 38.26 | 53.42 | 71.72 | 81.52 | 93.53 |
+| nlpai-lab/KoE5 + BAAI/bge-reranker-v2-m3 | 19.78 | 43.25 | 61.55 | 77.08 | 85.58 | 95.75 |
+| nlpai-lab/KoE5 + Dongjin-kr/ko-reranker | 20.15 | 45.47 | 61.37 | 78.00 | 87.25 | 96.49 |
+- Reranker를 사용한 후 Accuracy가 전반적으로 약 5% 이상 증가하였고 그 중 성능이 더 좋은 Dongjin-kr/ko-reranker를 사용하였다.
+
+### 2.7 Generator
+
+- 프롬프트 엔지니어링
+- 쿼리 리라이팅
+    - 2개 이상의 회사 정보가 필요하거나 질문이 부적절한 경우 리라이팅을 통해 검색 성능 향상
+
+### 2.8 Evaluation
+
+- G-Eval(Retrieval, Generator)
+    - Top-K Accuracy, BLEU 등은 상황에 따라 제대로 된 평가가 불가능하고, 사람이 일일이 데이터를 채점할 수 없어서 LLM-as-a-Judge 방식으로 G-Eval을 선택하였다.
+    - 빠른 구현과 원활한 평가를 위해 DeepEval Open Source를 활용
+    - Retrieval G-Eval 결과
  
 | Retrieval (top5)               | 유사성 | 필수 정보 포함 여부 | 질문 충족도 | 관련성 | 간결성 | total  |
 |---------------------------------|--------|------------------|------------|--------|--------|--------|
 | BAAI/bge-m3                     | 2.52   | 3                | 2.34       | 1.92   | 1      | 10.81  |
 | nlpai-lab/KURE-v1               | 2.62   | 3                | 2.36       | 1.98   | 0.99   | 10.98  |
 | fine-tuned/nlpai-lab/KURE-v1    | 2.68   | 2.87             | 2.41       | 1.8    | 1.3    | 11.08  |
+      - Generator G-Eval 결과
 
 | Generation | criterion1 | criterion2 | criterion3 | criterion4 | criterion5 | criterion6 | criterion7 | criterion8 | criterion9 | total |
 |------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|--------|

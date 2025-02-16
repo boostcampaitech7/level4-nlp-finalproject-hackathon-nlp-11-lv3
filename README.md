@@ -92,7 +92,7 @@ npm install
 npm run dev
 ```
 
-<!-- 여기 동영상 임베드 -->
+<video src="images/demo.mov" autoplay muted loop></video>
 
 ### 4.2 기능
 
@@ -101,14 +101,21 @@ npm run dev
 - 이전 context를 유지한 실시간 대화
 - 위젯: 코스피 지수, 실시간 환율, 최신 경제 뉴스, 종목 관련 정보, 종목별 최신 뉴스
 
+<br>
+
 # 결과
 
-1. **기술적인 배움**
-   - 새롭게 배운 도구 : Langchain, Deepeval 🛠️
-   - 기술적 도전 : RAG 파이프라인은 쉬워 보이나, 많은 엔지니어링 작업 필요
-   - 사용된 기술 : Asyncio, BackgroundTasks ⚙️
-2. **팀워크 & 협업 경험**
-   - 협업 도구 : Github issue와 discussion으로 task 할당 및 토의 🤝
-   - Commit 관리 : Github commit message template으로 일관성 유지, 협업 효율 증대 📚
-3. **프로젝트 진행 방식**
-   - 프로젝트 관리 : Notion에 완료된 일 공유, Zoom meeting을 통해 진행 상황 토의
+### 1. **기술적인 배움**
+
+- 새롭게 배운 도구 : Langchain, Deepeval 🛠️
+- 기술적 도전 : RAG 파이프라인은 쉬워 보이나, 많은 엔지니어링 작업 필요
+- 사용된 기술 : Asyncio, BackgroundTasks ⚙️
+
+### 2. **팀워크 & 협업 경험**
+
+- 협업 도구 : Github issue와 discussion으로 task 할당 및 토의 🤝
+- Commit 관리 : Github commit message template으로 일관성 유지, 협업 효율 증대 📚
+
+### 3. **프로젝트 진행 방식**
+
+- 프로젝트 관리 : Notion에 완료된 일 공유, Zoom meeting을 통해 진행 상황 토의

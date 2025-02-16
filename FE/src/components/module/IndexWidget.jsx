@@ -27,7 +27,7 @@ export default function IndexWidget() {
       clpr: data.clpr, // 종가
       hipr: data.hipr, // 고가
       lopr: data.lopr, // 저가
-      vs: data.vs, // 전일 대비
+      vs: parseFloat(data.vs), // 전일 대비
       fltRt: parseFloat(data.fltRt), // 등락률
     });
   }
@@ -66,7 +66,7 @@ export default function IndexWidget() {
           </Box>
           <CustomText size='l' weight='bold'>{`${indexData.clpr}`}</CustomText>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
-            <CustomText size='xs' weight='bold' color={parseFloat(indexData.vs) < 0 ? 'down' : 'up'} mx='6'>{parseFloat(indexData.vs) < 0 ? `▼ ${indexData.vs.slice(1,)}` : `▲ ${indexData.vs}`}</CustomText>
+            <CustomText size='xs' weight='bold' color={indexData.vs < 0 ? 'down' : 'up'} mx='6'>{indexData.vs < 0 ? `▼ ${-indexData.vs}` : `▲ ${indexData.vs}`}</CustomText>
             <CustomText size='xs' weight='bold' color={parseFloat(indexData.fltRt) < 0 ? 'down' : 'up'} mx='6'>{`${indexData.fltRt}%`}</CustomText>
           </Box>
         </CustomContainer>

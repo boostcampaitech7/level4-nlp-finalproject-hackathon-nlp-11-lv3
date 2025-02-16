@@ -57,7 +57,7 @@ export default function ChatPage() {
         chatHistory,
         (res) => {     
             setSessionId(res.data.session_id);
-            if (company === '') setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
+            if (res.data.company === '') setCompany(res.data.company === '네이버' ? 'NAVER' : res.data.company);
             setAnswers((prev) => [...prev, res.data.answer]);
             setChatHistory(res.data.chat_history);
         },
@@ -86,7 +86,7 @@ export default function ChatPage() {
       </SideBar>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100vw', margin: '60px 0 40px 0' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', width: '90%', height: '600px', overflowY: 'auto' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', width: '90%', height: '74vh', overflowY: 'auto' }}>
           {queries.map((q, idx) => (
             <QueryOutput key={idx} answer={answers[idx] || ''}>{q}</QueryOutput>
           ))}

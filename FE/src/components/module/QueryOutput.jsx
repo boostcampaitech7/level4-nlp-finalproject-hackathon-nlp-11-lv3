@@ -39,7 +39,7 @@ export default function QueryOutput({ children, answer }) {
 
     return (
         <CustomContainer color='191A1A' radius='25' width='85%' height='auto' flexDirection='column' justifyContent='flex-start' padding='20' my='20px'>
-            <CustomText color='blur' weight='bold' size='m' justifyContent='flex-start' my='40' mx='25'>
+            <CustomText color='blur' weight='bold' size='m' justifyContent='flex-start' my='40' mx='25' textAlign='start'>
                 {children}
             </CustomText>
             

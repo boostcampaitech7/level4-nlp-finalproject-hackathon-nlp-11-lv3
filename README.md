@@ -124,6 +124,8 @@ npm install
 npm run dev
 ```
 
+<!-- 영상 재생 안 됨 -->
+
 <video src="images/demo.mov" autoplay muted loop></video>
 
 ### 4.2 기능

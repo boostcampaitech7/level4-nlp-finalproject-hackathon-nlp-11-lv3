@@ -215,10 +215,10 @@ npm run dev
 
 - **OCR**: DocLayout-Yolo, Clova OCR, Upstage Parser API
 - **VectorDB**: ChromaDB
-- **Retriever: Langchain**
+- **Retriever**: Langchain
 - **Generator**: Langchain, LLM-based Answering Model (gpt-4o, Clova X)
 - **Evaluation**: G-Eval, Top-K Accuracy
-- API server: Fastapi
+- **API server**: Fastapi
 - **Web Front-end**: React.js, Tailwind CSS
 
 ### 팀워크 & 협업 경험

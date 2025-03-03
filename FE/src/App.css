@@ -1,0 +1,9 @@
+.body-style {
+  background: #101010;
+  background-size: cover;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+}

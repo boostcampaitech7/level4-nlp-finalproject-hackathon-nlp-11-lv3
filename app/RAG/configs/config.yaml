@@ -1,0 +1,54 @@
+defaults:
+  - inference: generator     
+  - ret_eval: ret_test
+  - ret_finetune: ret_finetune  
+  - _self_                 
+
+datapath: ../data/
+vector_store_path: "../vector_db"
+chunk_size: 300
+chunk_overlap: 15
+dataset: ODQA
+openai_key: ''
+seed: 42
+
+# Retrieval 설정
+retrieval:
+  top_k: 5
+  model_name: "nlpai-lab/KoE5"
+  rerank: True
+  reranker_model_name: "BAAI/bge-reranker-v2-m3"
+  use_mmr: true  # MMR 사용 여부
+  lambda_mult: 0.5  # MMR 다양성 가중치
+  batch_size: 32  # 배치 처리 크기
+  timeout: 30  # 검색 타임아웃
+  cache_size: 1000  # 캐시 크기
+  parallel_workers: 4  # 병렬 처리 워커 수
+
+eval_data_path: "data/ephemeral/data/LabQ/selected_eval.csv"
+retriever_type: "dense"
+embedding_model_source: "huggingface"
+passage_embedding_model_name: "nlpai-lab/KoE5"
+query_embedding_model_name: "nlpai-lab/KoE5"
+# query_embedding_model_name: "RAG/retrieval/embedding_model/query_encoder"
+# passage_embedding_model_name: "RAG/retrieval/embedding_model/passage_encoder"
+llm_model_source: "openai"
+llm_model_name: "gpt-4o-mini"
+chat_template: |
+  주어진 문서들을 바탕으로 질문에 답해주세요. 
+  주어진 문서중 table이 있을 경우 이를 해석해서 대답해주세요.  
+  여러 문서들에서 정답을 찾을 수 있는 경우 출처를 포함해 여러 출처에서 답을 찾아 출력해주세요.  
+  만약 주어진 문서들 전체에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요. 
+  {docs}
+
+chatting_template: |
+  당신은 금융 chatbot입니다. 
+  주어진 문서를 바탕으로 질문에 답해주세요. 
+  주어진 문서가 table일 경우 이를 해석해서 대답해주세요.  
+  여러 문서에서 정답이 나오는 경우 출처를 포함해 여러 출처에서 답을 찾아 출력해주세요.  
+  만약 주어진 문서에서 답을 찾을수 없는경우 답할 수 없다고 대답해주세요. 
+  또 이전 대화 기록을 참고해서 답변해주세요. 
+  주어진 문서: {docs}
+batch_size: 16
+g_eval: True
+mode: retrieve

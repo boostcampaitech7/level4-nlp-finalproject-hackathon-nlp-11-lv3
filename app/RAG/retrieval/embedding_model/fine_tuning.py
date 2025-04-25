@@ -11,7 +11,8 @@ from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import AdamW, get_scheduler
+from torch.optim import AdamW
+from transformers import get_scheduler
 
 # 환경 설정
 WANDB_PROJECT = "retriever_embedding_model_fine-tuning"
